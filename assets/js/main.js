@@ -30,14 +30,12 @@ function addToCart(item) {
   const cart = getCart();
   const found = cart.find((x) => x.id === item.id);
 
-  if (found) {
-    found.qty += 1;
-  } else {
-    cart.push({ ...item, qty: 1 });
-  }
+  if (found) found.qty += 1;
+  else cart.push({ ...item, qty: 1 });
 
   saveCart(cart);
   setCartCountBadge();
+  return cart;
 }
 
 function removeFromCart(id) {
@@ -69,7 +67,28 @@ function formatMoney(n) {
 }
 
 // =========================
-//  Home Page: Add to Cart + Buy Now
+//  SweetAlert Helpers
+// =========================
+function toastSuccess(title) {
+  if (typeof Swal === "undefined") return;
+  Swal.fire({
+    toast: true,
+    position: "top-end",
+    icon: "success",
+    title,
+    showConfirmButton: false,
+    timer: 1200,
+    timerProgressBar: true,
+  });
+}
+
+function swalInfo(title, text = "") {
+  if (typeof Swal === "undefined") return;
+  Swal.fire({ icon: "info", title, text });
+}
+
+// =========================
+//  Click Events: Add to Cart, Buy Now, Category Scroll
 // =========================
 document.addEventListener("click", (e) => {
   // Add to Cart
@@ -82,10 +101,7 @@ document.addEventListener("click", (e) => {
       img: addBtn.dataset.img,
     };
     addToCart(item);
-
-    // Optional feedback (small, simple)
-    addBtn.textContent = "Added!";
-    setTimeout(() => (addBtn.textContent = "Add to Cart"), 700);
+    toastSuccess("Added to cart");
     return;
   }
 
@@ -99,9 +115,43 @@ document.addEventListener("click", (e) => {
       img: buyBtn.dataset.img,
     };
     addToCart(item);
-    // Let the link navigate to order.html naturally
+    // Link will navigate to order.html naturally
+    return;
+  }
+
+  // Category scroll
+  const catBtn = e.target.closest(".category-btn");
+  if (catBtn) {
+    const target = catBtn.dataset.target;
+    if (!target) return;
+
+    const el = document.querySelector(target);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 });
+
+// =========================
+//  Search Filter (typing hides non-matching cards)
+// =========================
+function setupSearchFilter() {
+  const input = document.getElementById("searchInput");
+  if (!input) return; // not on index page
+
+  const items = Array.from(document.querySelectorAll(".food-item"));
+
+  function applyFilter() {
+    const q = input.value.trim().toLowerCase();
+
+    items.forEach((card) => {
+      const name = (card.dataset.name || "").toLowerCase();
+      const text = card.textContent.toLowerCase();
+      const match = name.includes(q) || text.includes(q);
+      card.style.display = match ? "" : "none";
+    });
+  }
+
+  input.addEventListener("input", applyFilter);
+}
 
 // =========================
 //  Order Page: Render cart list + totals
@@ -119,13 +169,13 @@ function renderOrderPage() {
   const placeBtn = document.getElementById("placeOrderBtn");
   const clearBtn = document.getElementById("clearCartBtn");
 
-  const deliveryFee = 2.0;    // fixed delivery
-  const taxRate = 0;          // optional (0 = no tax)
+  const deliveryFee = 2.0;
+  const taxRate = 0; // optional
 
   function calcTotals(cart) {
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
     const tax = subtotal * taxRate;
-    const delivery = cart.length > 0 ? deliveryFee : 0; // no delivery if cart empty
+    const delivery = cart.length > 0 ? deliveryFee : 0;
     const total = subtotal + delivery + tax;
 
     subtotalEl.textContent = formatMoney(subtotal);
@@ -176,10 +226,10 @@ function renderOrderPage() {
     calcTotals(cart);
   }
 
-  // Initial render
+  // initial render
   render(getCart());
 
-  // Qty +/-, Remove (event delegation)
+  // qty and remove (event delegation)
   orderItemsDiv.addEventListener("click", (e) => {
     const minus = e.target.closest(".qty-minus");
     const plus = e.target.closest(".qty-plus");
@@ -190,8 +240,7 @@ function renderOrderPage() {
       const cart = getCart();
       const item = cart.find((x) => x.id === id);
       if (!item) return;
-      const updated = updateQty(id, item.qty - 1);
-      render(updated);
+      render(updateQty(id, item.qty - 1));
       return;
     }
 
@@ -200,37 +249,65 @@ function renderOrderPage() {
       const cart = getCart();
       const item = cart.find((x) => x.id === id);
       if (!item) return;
-      const updated = updateQty(id, item.qty + 1);
-      render(updated);
+      render(updateQty(id, item.qty + 1));
       return;
     }
 
     if (remove) {
       const id = remove.dataset.id;
-      const updated = removeFromCart(id);
-      render(updated);
+      render(removeFromCart(id));
     }
   });
 
-  // Clear cart
+  // clear cart confirm
   if (clearBtn) {
     clearBtn.addEventListener("click", () => {
-      const updated = clearCart();
-      render(updated);
+      if (typeof Swal === "undefined") {
+        render(clearCart());
+        return;
+      }
+
+      Swal.fire({
+        icon: "warning",
+        title: "Clear cart?",
+        text: "This will remove all items.",
+        showCancelButton: true,
+        confirmButtonText: "Yes, clear",
+        cancelButtonText: "Cancel",
+      }).then((res) => {
+        if (res.isConfirmed) {
+          render(clearCart());
+          toastSuccess("Cart cleared");
+        }
+      });
     });
   }
 
-  // Place order
+  // place order
   if (placeBtn) {
     placeBtn.addEventListener("click", () => {
       const cart = getCart();
       if (cart.length === 0) {
-        alert("Your cart is empty.");
+        swalInfo("Cart empty", "Please add items from Home.");
         return;
       }
-      alert("Order placed successfully!");
-      clearCart();
-      render(getCart());
+
+      if (typeof Swal === "undefined") {
+        alert("Order placed successfully!");
+        clearCart();
+        render(getCart());
+        return;
+      }
+
+      Swal.fire({
+        icon: "success",
+        title: "Order placed!",
+        text: "Thanks for ordering. Your food will be delivered soon.",
+        confirmButtonText: "OK",
+      }).then(() => {
+        clearCart();
+        render(getCart());
+      });
     });
   }
 }
@@ -240,5 +317,6 @@ function renderOrderPage() {
 // =========================
 document.addEventListener("DOMContentLoaded", () => {
   setCartCountBadge();
+  setupSearchFilter();
   renderOrderPage();
 });
