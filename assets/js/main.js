@@ -1,14 +1,12 @@
 // =========================
-//  Cart Helpers (localStorage)
+//  Cart (localStorage)
 // =========================
 const CART_KEY = "cart";
+const PRODUCTS_KEY = "products_seeded_v1"; // just to seed once
 
 function getCart() {
-  try {
-    return JSON.parse(localStorage.getItem(CART_KEY)) || [];
-  } catch {
-    return [];
-  }
+  try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; }
+  catch { return []; }
 }
 
 function saveCart(cart) {
@@ -22,17 +20,14 @@ function cartCount(cart) {
 function setCartCountBadge() {
   const badge = document.getElementById("cartCount");
   if (!badge) return;
-  const cart = getCart();
-  badge.textContent = cartCount(cart);
+  badge.textContent = cartCount(getCart());
 }
 
 function addToCart(item) {
   const cart = getCart();
   const found = cart.find((x) => x.id === item.id);
-
   if (found) found.qty += 1;
   else cart.push({ ...item, qty: 1 });
-
   saveCart(cart);
   setCartCountBadge();
   return cart;
@@ -49,7 +44,6 @@ function updateQty(id, newQty) {
   const cart = getCart();
   const found = cart.find((x) => x.id === id);
   if (!found) return cart;
-
   found.qty = Math.max(1, newQty);
   saveCart(cart);
   setCartCountBadge();
@@ -63,11 +57,11 @@ function clearCart() {
 }
 
 function formatMoney(n) {
-  return `$${n.toFixed(2)}`;
+  return `$${Number(n).toFixed(2)}`;
 }
 
 // =========================
-//  SweetAlert Helpers
+//  SweetAlert
 // =========================
 function toastSuccess(title) {
   if (typeof Swal === "undefined") return;
@@ -88,10 +82,143 @@ function swalInfo(title, text = "") {
 }
 
 // =========================
-//  Click Events: Add to Cart, Buy Now, Category Scroll
+//  URL helpers (persist q)
+// =========================
+function getUrlParams() {
+  const url = new URL(window.location.href);
+  return url.searchParams;
+}
+
+function setUrlParam(key, value) {
+  const url = new URL(window.location.href);
+  if (!value) url.searchParams.delete(key);
+  else url.searchParams.set(key, value);
+  history.replaceState({}, "", url.toString());
+}
+
+// =========================
+//  Product Data (seed from cards on first load)
+// =========================
+function seedProductsFromHomePage() {
+  // Only seed if we're on index and not seeded before
+  const items = document.querySelectorAll(".add-cart[data-id]");
+  if (!items.length) return;
+
+  if (localStorage.getItem(PRODUCTS_KEY) === "1") return;
+
+  const map = {};
+  items.forEach((btn) => {
+    const id = btn.dataset.id;
+    map[id] = {
+      id,
+      name: btn.dataset.name,
+      price: Number(btn.dataset.price),
+      img: btn.dataset.img,
+      desc: btn.dataset.desc || "",
+      category: btn.dataset.category || "",
+    };
+  });
+
+  localStorage.setItem("products", JSON.stringify(map));
+  localStorage.setItem(PRODUCTS_KEY, "1");
+}
+
+function getProductsMap() {
+  try { return JSON.parse(localStorage.getItem("products")) || {}; }
+  catch { return {}; }
+}
+
+// =========================
+//  Active category button UI
+// =========================
+function setActiveCategoryButton(btn) {
+  const all = document.querySelectorAll(".category-btn");
+  all.forEach((b) => {
+    b.classList.remove("btn-danger");
+    b.classList.add("btn-outline-danger");
+  });
+
+  if (btn) {
+    btn.classList.remove("btn-outline-danger");
+    btn.classList.add("btn-danger");
+  }
+}
+
+// =========================
+//  Search filter (typing hides non-matching cards)
+//  + No results message
+//  + Persist query in URL (?q=...)
+// =========================
+function setupSearchFilter() {
+  const input = document.getElementById("searchInput");
+  if (!input) return; // not on index.html
+
+  const noResults = document.getElementById("noResults");
+  const items = Array.from(document.querySelectorAll(".food-item"));
+
+  // Restore q from URL
+  const qFromUrl = getUrlParams().get("q") || "";
+  input.value = qFromUrl;
+
+  function applyFilter() {
+    const q = input.value.trim().toLowerCase();
+    setUrlParam("q", q); // persist in URL
+
+    let visibleCount = 0;
+
+    items.forEach((card) => {
+      const name = (card.dataset.name || "").toLowerCase();
+      const text = card.textContent.toLowerCase();
+      const match = !q || name.includes(q) || text.includes(q);
+      card.style.display = match ? "" : "none";
+      if (match) visibleCount += 1;
+    });
+
+    if (noResults) {
+      noResults.classList.toggle("d-none", visibleCount !== 0);
+    }
+  }
+
+  input.addEventListener("input", applyFilter);
+  applyFilter(); // run once on load
+}
+
+// =========================
+//  Category scroll + active button
+// =========================
+function setupCategoryScroll() {
+  const btns = document.querySelectorAll(".category-btn");
+  if (!btns.length) return;
+
+  // Optional: restore category selection from URL (?cat=#pizzaSection)
+  const cat = getUrlParams().get("cat");
+  if (cat) {
+    const targetBtn = Array.from(btns).find((b) => b.dataset.target === cat);
+    if (targetBtn) {
+      setActiveCategoryButton(targetBtn);
+      const el = document.querySelector(cat);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  btns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setActiveCategoryButton(btn);
+
+      const target = btn.dataset.target;
+      if (!target) return;
+
+      setUrlParam("cat", target); // persist selected category
+      const el = document.querySelector(target);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
+// =========================
+//  Click: Add to cart / Buy now (home + product page)
 // =========================
 document.addEventListener("click", (e) => {
-  // Add to Cart
   const addBtn = e.target.closest(".add-cart");
   if (addBtn) {
     const item = {
@@ -105,7 +232,6 @@ document.addEventListener("click", (e) => {
     return;
   }
 
-  // Buy Now (also adds to cart)
   const buyBtn = e.target.closest(".buy-now");
   if (buyBtn) {
     const item = {
@@ -115,50 +241,70 @@ document.addEventListener("click", (e) => {
       img: buyBtn.dataset.img,
     };
     addToCart(item);
-    // Link will navigate to order.html naturally
-    return;
-  }
-
-  // Category scroll
-  const catBtn = e.target.closest(".category-btn");
-  if (catBtn) {
-    const target = catBtn.dataset.target;
-    if (!target) return;
-
-    const el = document.querySelector(target);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    // let link navigate to order.html
   }
 });
 
 // =========================
-//  Search Filter (typing hides non-matching cards)
+//  Product page render (product.html?id=...)
 // =========================
-function setupSearchFilter() {
-  const input = document.getElementById("searchInput");
-  if (!input) return; // not on index page
+function renderProductPage() {
+  const wrap = document.getElementById("productWrap");
+  if (!wrap) return; // not product.html
 
-  const items = Array.from(document.querySelectorAll(".food-item"));
-
-  function applyFilter() {
-    const q = input.value.trim().toLowerCase();
-
-    items.forEach((card) => {
-      const name = (card.dataset.name || "").toLowerCase();
-      const text = card.textContent.toLowerCase();
-      const match = name.includes(q) || text.includes(q);
-      card.style.display = match ? "" : "none";
-    });
+  const id = getUrlParams().get("id");
+  if (!id) {
+    wrap.innerHTML = `<div class="col-12"><div class="alert alert-danger">No product id found.</div></div>`;
+    return;
   }
 
-  input.addEventListener("input", applyFilter);
+  const map = getProductsMap();
+  const p = map[id];
+
+  if (!p) {
+    wrap.innerHTML = `<div class="col-12"><div class="alert alert-danger">Product not found. Go back to Home and open again.</div></div>`;
+    return;
+  }
+
+  document.title = p.name;
+
+  wrap.innerHTML = `
+    <div class="col-12 col-md-6">
+      <img src="${p.img}" alt="${p.name}" class="img-fluid rounded border" style="width:100%; max-height:420px; object-fit:cover;">
+    </div>
+
+    <div class="col-12 col-md-6">
+      <h1 class="mb-2">${p.name}</h1>
+      <div class="text-muted mb-2">${p.category || ""}</div>
+      <div class="fs-3 fw-bold text-danger mb-3">${formatMoney(p.price)}</div>
+      <p class="text-muted">${p.desc || "Tasty and fresh, prepared for you."}</p>
+
+      <div class="d-flex gap-2 mt-4">
+        <button class="btn btn-outline-secondary add-cart"
+          data-id="${p.id}"
+          data-name="${p.name}"
+          data-price="${p.price}"
+          data-img="${p.img}"
+        >Add to Cart</button>
+
+        <a class="btn btn-danger buy-now"
+          href="order.html"
+          data-id="${p.id}"
+          data-name="${p.name}"
+          data-price="${p.price}"
+          data-img="${p.img}"
+        >Buy Now</a>
+      </div>
+    </div>
+  `;
 }
 
 // =========================
-//  Order Page: Render cart list + totals
+//  Order page render (multi-item)
 // =========================
 function renderOrderPage() {
   const orderItemsDiv = document.getElementById("orderItems");
-  if (!orderItemsDiv) return; // not on order.html
+  if (!orderItemsDiv) return;
 
   const emptyMsg = document.getElementById("emptyMsg");
   const subtotalEl = document.getElementById("subtotal");
@@ -170,12 +316,12 @@ function renderOrderPage() {
   const clearBtn = document.getElementById("clearCartBtn");
 
   const deliveryFee = 2.0;
-  const taxRate = 0; // optional
+  const taxRate = 0;
 
   function calcTotals(cart) {
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
     const tax = subtotal * taxRate;
-    const delivery = cart.length > 0 ? deliveryFee : 0;
+    const delivery = cart.length ? deliveryFee : 0;
     const total = subtotal + delivery + tax;
 
     subtotalEl.textContent = formatMoney(subtotal);
@@ -187,7 +333,7 @@ function renderOrderPage() {
   function render(cart) {
     setCartCountBadge();
 
-    if (cart.length === 0) {
+    if (!cart.length) {
       orderItemsDiv.innerHTML = "";
       emptyMsg.classList.remove("d-none");
       calcTotals(cart);
@@ -196,40 +342,32 @@ function renderOrderPage() {
 
     emptyMsg.classList.add("d-none");
 
-    orderItemsDiv.innerHTML = cart
-      .map(
-        (item) => `
-        <div class="border rounded p-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-          <div class="d-flex align-items-center gap-3">
-            <img src="${item.img}" alt="${item.name}" style="width:80px;height:80px;object-fit:cover" class="rounded">
-            <div>
-              <h6 class="mb-1">${item.name}</h6>
-              <div class="text-muted small">Price: ${formatMoney(item.price)}</div>
-              <div class="small fw-semibold mt-1">Item Total: ${formatMoney(item.price * item.qty)}</div>
-            </div>
+    orderItemsDiv.innerHTML = cart.map((item) => `
+      <div class="border rounded p-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <img src="${item.img}" alt="${item.name}" style="width:80px;height:80px;object-fit:cover" class="rounded">
+          <div>
+            <h6 class="mb-1">${item.name}</h6>
+            <div class="text-muted small">Price: ${formatMoney(item.price)}</div>
+            <div class="small fw-semibold mt-1">Item Total: ${formatMoney(item.price * item.qty)}</div>
           </div>
-
-          <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-outline-secondary btn-sm qty-minus" data-id="${item.id}">−</button>
-            <span class="fw-bold px-2" style="min-width: 28px; text-align:center;">${item.qty}</span>
-            <button class="btn btn-outline-secondary btn-sm qty-plus" data-id="${item.id}">+</button>
-          </div>
-
-          <button class="btn btn-outline-danger btn-sm remove-item" data-id="${item.id}">
-            Remove
-          </button>
         </div>
-      `
-      )
-      .join("");
+
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-outline-secondary btn-sm qty-minus" data-id="${item.id}">−</button>
+          <span class="fw-bold px-2" style="min-width: 28px; text-align:center;">${item.qty}</span>
+          <button class="btn btn-outline-secondary btn-sm qty-plus" data-id="${item.id}">+</button>
+        </div>
+
+        <button class="btn btn-outline-danger btn-sm remove-item" data-id="${item.id}">Remove</button>
+      </div>
+    `).join("");
 
     calcTotals(cart);
   }
 
-  // initial render
   render(getCart());
 
-  // qty and remove (event delegation)
   orderItemsDiv.addEventListener("click", (e) => {
     const minus = e.target.closest(".qty-minus");
     const plus = e.target.closest(".qty-plus");
@@ -238,35 +376,32 @@ function renderOrderPage() {
     if (minus) {
       const id = minus.dataset.id;
       const cart = getCart();
-      const item = cart.find((x) => x.id === id);
-      if (!item) return;
-      render(updateQty(id, item.qty - 1));
+      const it = cart.find(x => x.id === id);
+      if (!it) return;
+      render(updateQty(id, it.qty - 1));
       return;
     }
 
     if (plus) {
       const id = plus.dataset.id;
       const cart = getCart();
-      const item = cart.find((x) => x.id === id);
-      if (!item) return;
-      render(updateQty(id, item.qty + 1));
+      const it = cart.find(x => x.id === id);
+      if (!it) return;
+      render(updateQty(id, it.qty + 1));
       return;
     }
 
     if (remove) {
-      const id = remove.dataset.id;
-      render(removeFromCart(id));
+      render(removeFromCart(remove.dataset.id));
     }
   });
 
-  // clear cart confirm
   if (clearBtn) {
     clearBtn.addEventListener("click", () => {
       if (typeof Swal === "undefined") {
         render(clearCart());
         return;
       }
-
       Swal.fire({
         icon: "warning",
         title: "Clear cart?",
@@ -283,19 +418,11 @@ function renderOrderPage() {
     });
   }
 
-  // place order
   if (placeBtn) {
     placeBtn.addEventListener("click", () => {
       const cart = getCart();
-      if (cart.length === 0) {
+      if (!cart.length) {
         swalInfo("Cart empty", "Please add items from Home.");
-        return;
-      }
-
-      if (typeof Swal === "undefined") {
-        alert("Order placed successfully!");
-        clearCart();
-        render(getCart());
         return;
       }
 
@@ -317,6 +444,15 @@ function renderOrderPage() {
 // =========================
 document.addEventListener("DOMContentLoaded", () => {
   setCartCountBadge();
+
+  // index.html only
+  seedProductsFromHomePage();
   setupSearchFilter();
+  setupCategoryScroll();
+
+  // product.html only
+  renderProductPage();
+
+  // order.html only
   renderOrderPage();
 });
