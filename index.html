@@ -5,13 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Food Order</title>
 
-  <!-- Bootstrap CSS -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
     rel="stylesheet"
   />
-
-  <!-- Your CSS (optional overrides) -->
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 
@@ -34,10 +31,16 @@
     </button>
 
     <div class="collapse navbar-collapse" id="navMenu">
-      <ul class="navbar-nav ms-auto gap-2">
+      <ul class="navbar-nav ms-auto gap-2 align-items-lg-center">
         <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
         <li class="nav-item"><a class="nav-link" href="#menu">Menu / Food Items</a></li>
-        <li class="nav-item"><a class="nav-link" href="#cart">Cart</a></li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="order.html">
+            Cart
+            <span class="badge bg-light text-danger ms-1" id="cartCount">0</span>
+          </a>
+        </li>
       </ul>
     </div>
   </nav>
@@ -63,15 +66,12 @@
     </div>
   </section>
 
-  <!-- Featured Menu -->
+  <!-- Menu -->
   <section id="menu" class="container my-5">
 
     <!-- Pizza -->
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-      <h2 class="m-0">Pizza</h2>
-      <a class="text-decoration-none text-danger fw-semibold" href="#top"></a>
-    </div>
-    <div class="row g-4 mb-5" id="pizzaSection">
+    <h2 class="mb-3">Pizza</h2>
+    <div class="row g-4 mb-5">
 
       <div class="col-12 col-sm-6 col-lg-3 food-item" data-name="Cheese Pizza" data-category="pizza">
         <div class="card h-100">
@@ -82,11 +82,20 @@
             <p class="fw-bold mb-3">$8.99</p>
 
             <div class="mt-auto d-flex gap-2">
-              <button class="btn btn-outline-secondary w-50 btn-sm add-cart">Add to Cart</button>
+              <button
+                class="btn btn-outline-secondary w-50 btn-sm add-cart"
+                data-id="pizza-1"
+                data-name="Cheese Pizza"
+                data-price="8.99"
+                data-img="assets/images/pizza.jpg"
+              >
+                Add to Cart
+              </button>
 
               <a
                 href="order.html"
                 class="btn btn-danger w-50 btn-sm buy-now"
+                data-id="pizza-1"
                 data-name="Cheese Pizza"
                 data-price="8.99"
                 data-img="assets/images/pizza.jpg"
@@ -107,11 +116,20 @@
             <p class="fw-bold mb-3">$10.50</p>
 
             <div class="mt-auto d-flex gap-2">
-              <button class="btn btn-outline-secondary w-50 btn-sm add-cart">Add to Cart</button>
+              <button
+                class="btn btn-outline-secondary w-50 btn-sm add-cart"
+                data-id="pizza-2"
+                data-name="Pepperoni Pizza"
+                data-price="10.50"
+                data-img="assets/images/pizza2.jpg"
+              >
+                Add to Cart
+              </button>
 
               <a
                 href="order.html"
                 class="btn btn-danger w-50 btn-sm buy-now"
+                data-id="pizza-2"
                 data-name="Pepperoni Pizza"
                 data-price="10.50"
                 data-img="assets/images/pizza2.jpg"
@@ -127,7 +145,7 @@
 
     <!-- Burger -->
     <h2 class="mb-3">Burger</h2>
-    <div class="row g-4 mb-5" id="burgerSection">
+    <div class="row g-4 mb-5">
 
       <div class="col-12 col-sm-6 col-lg-3 food-item" data-name="Beef Burger" data-category="burger">
         <div class="card h-100">
@@ -138,11 +156,20 @@
             <p class="fw-bold mb-3">$6.50</p>
 
             <div class="mt-auto d-flex gap-2">
-              <button class="btn btn-outline-secondary w-50 btn-sm add-cart">Add to Cart</button>
+              <button
+                class="btn btn-outline-secondary w-50 btn-sm add-cart"
+                data-id="burger-1"
+                data-name="Beef Burger"
+                data-price="6.50"
+                data-img="assets/images/burger.jpg"
+              >
+                Add to Cart
+              </button>
 
               <a
                 href="order.html"
                 class="btn btn-danger w-50 btn-sm buy-now"
+                data-id="burger-1"
                 data-name="Beef Burger"
                 data-price="6.50"
                 data-img="assets/images/burger.jpg"
@@ -163,11 +190,20 @@
             <p class="fw-bold mb-3">$5.75</p>
 
             <div class="mt-auto d-flex gap-2">
-              <button class="btn btn-outline-secondary w-50 btn-sm add-cart">Add to Cart</button>
+              <button
+                class="btn btn-outline-secondary w-50 btn-sm add-cart"
+                data-id="burger-2"
+                data-name="Chicken Burger"
+                data-price="5.75"
+                data-img="assets/images/burger2.jpg"
+              >
+                Add to Cart
+              </button>
 
               <a
                 href="order.html"
                 class="btn btn-danger w-50 btn-sm buy-now"
+                data-id="burger-2"
                 data-name="Chicken Burger"
                 data-price="5.75"
                 data-img="assets/images/burger2.jpg"
@@ -183,7 +219,7 @@
 
     <!-- Biriyani -->
     <h2 class="mb-3">Biriyani</h2>
-    <div class="row g-4" id="biriyaniSection">
+    <div class="row g-4">
 
       <div class="col-12 col-sm-6 col-lg-3 food-item" data-name="Chicken Biriyani" data-category="biriyani">
         <div class="card h-100">
@@ -194,11 +230,20 @@
             <p class="fw-bold mb-3">$9.25</p>
 
             <div class="mt-auto d-flex gap-2">
-              <button class="btn btn-outline-secondary w-50 btn-sm add-cart">Add to Cart</button>
+              <button
+                class="btn btn-outline-secondary w-50 btn-sm add-cart"
+                data-id="biriyani-1"
+                data-name="Chicken Biriyani"
+                data-price="9.25"
+                data-img="assets/images/biriyani.jpg"
+              >
+                Add to Cart
+              </button>
 
               <a
                 href="order.html"
                 class="btn btn-danger w-50 btn-sm buy-now"
+                data-id="biriyani-1"
                 data-name="Chicken Biriyani"
                 data-price="9.25"
                 data-img="assets/images/biriyani.jpg"
@@ -226,10 +271,7 @@
     </div>
   </footer>
 
-  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Your JS -->
   <script src="assets/js/main.js"></script>
 </body>
 </html>
