@@ -183,36 +183,76 @@ function hidePageLoader() {
 }
 
 // -------------------------
-// Visitor tracking (server-backed)
+// Visitor tracking (JSONBin + IP lookup)
 // -------------------------
-function getApiBase() {
-  if (window.location.protocol === "file:") {
-    return "http://localhost:3000";
-  }
-  return "";
+const JSONBIN_ID = "697a6ed4d0ea881f408e5c42";
+const JSONBIN_KEY = "$2a$10$nJdCbh/SlywIpznbkkGt0ORnvpt5113.fJDq5plotjSh6EHcmUnbS";
+
+async function fetchJsonBinRecord() {
+  const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
+    headers: {
+      "X-ACCESS-KEY": JSONBIN_KEY,
+    },
+  });
+  if (!res.ok) throw new Error("Failed");
+  const data = await res.json();
+  return data?.record || {};
 }
 
-function logVisit() {
+async function updateJsonBinRecord(record) {
+  const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "X-ACCESS-KEY": JSONBIN_KEY,
+    },
+    body: JSON.stringify(record),
+  });
+  if (!res.ok) throw new Error("Failed");
+  return res.json();
+}
+
+async function getIpLocation() {
+  const res = await fetch("https://ipapi.co/json/");
+  if (!res.ok) throw new Error("Failed");
+  return res.json();
+}
+
+async function logVisit() {
   if (sessionStorage.getItem("visitLogged")) return;
   sessionStorage.setItem("visitLogged", "true");
 
-  const base = getApiBase();
-  fetch(`${base}/api/visit`, { method: "POST" }).catch(() => {
+  try {
+    const geo = await getIpLocation();
+    const record = await fetchJsonBinRecord();
+    const visits = Array.isArray(record.visits) ? record.visits : [];
+
+    const visit = {
+      ip: geo?.ip || "",
+      city: geo?.city || "",
+      region: geo?.region || "",
+      country: geo?.country_name || "",
+      latitude: geo?.latitude || "",
+      longitude: geo?.longitude || "",
+      timezone: geo?.timezone || "",
+      time: new Date().toISOString(),
+    };
+
+    visits.push(visit);
+    const trimmed = visits.slice(-200);
+    await updateJsonBinRecord({ visits: trimmed });
+  } catch {
     // ignore logging errors
-  });
+  }
 }
 
 async function loadVisitorInsights() {
   const panel = document.getElementById("visitorPanel");
   if (!panel) return;
 
-  const base = getApiBase();
-
   try {
-    const res = await fetch(`${base}/api/visits`);
-    if (!res.ok) throw new Error("Failed");
-    const data = await res.json();
-    const visits = Array.isArray(data.visits) ? data.visits : [];
+    const record = await fetchJsonBinRecord();
+    const visits = Array.isArray(record.visits) ? record.visits : [];
 
     if (!visits.length) {
       panel.innerHTML = `<div class="visitor-empty">No visits recorded yet.</div>`;
@@ -241,7 +281,7 @@ async function loadVisitorInsights() {
       </div>
     `;
   } catch {
-    panel.innerHTML = `<div class="visitor-empty">Run the local server to see visitor data.</div>`;
+    panel.innerHTML = `<div class="visitor-empty">Unable to load visitor data.</div>`;
   }
 }
 
