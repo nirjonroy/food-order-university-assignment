@@ -11,13 +11,14 @@
     rel="stylesheet"
   />
 
-  <link rel="stylesheet" href="css/style.css" />
+  <!-- If your css is in assets/css/style.css -->
+  <link rel="stylesheet" href="assets/css/style.css" />
 </head>
-<body>
 
+<body>
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-danger px-4">
-    <a class="navbar-brand fw-bold" href="index.html">FoodOrder</a>
+    <a class="navbar-brand fw-bold" href="#/home">FoodOrder</a>
 
     <button
       class="navbar-toggler"
@@ -33,10 +34,16 @@
 
     <div class="collapse navbar-collapse" id="navMenu">
       <ul class="navbar-nav ms-auto gap-2 align-items-lg-center">
-        <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="#menu">Menu</a></li>
         <li class="nav-item">
-          <a class="nav-link" href="order.html">
+          <a class="nav-link" href="#/home" data-nav="home">Home</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="#/home?scroll=menu" data-nav="menu">Menu</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="#/order" data-nav="order">
             Cart <span class="badge bg-light text-danger ms-1" id="cartCount">0</span>
           </a>
         </li>
@@ -44,85 +51,29 @@
     </div>
   </nav>
 
-  <!-- Hero Slider -->
-  <section class="container my-4">
-    <div id="heroCarousel" class="carousel slide rounded overflow-hidden" data-bs-ride="carousel">
-      <div class="carousel-indicators" id="heroIndicators"></div>
-
-      <div class="carousel-inner" id="heroCarouselInner">
-        <!-- JS will inject slides from JSON -->
-        <div class="carousel-item active">
-          <div class="d-flex justify-content-center align-items-center bg-light" style="height:320px;">
-            <div class="text-center">
-              <h3 class="fw-bold">Loading meals...</h3>
-              <p class="text-muted mb-0">Please wait</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-        <span class="visually-hidden">Previous</span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon"></span>
-        <span class="visually-hidden">Next</span>
-      </button>
-    </div>
-  </section>
-
-  <!-- Search + Categories -->
-  <section class="container my-4">
-    <div class="row g-3 align-items-center">
-      <div class="col-12 col-md-8 mx-auto">
-        <input
-          id="searchInput"
-          class="form-control form-control-lg"
-          type="text"
-          placeholder="Search for food..."
-        />
-      </div>
-    </div>
-
-    <div id="categoryButtons" class="d-flex flex-wrap gap-2 justify-content-center mt-3">
-      <!-- JS will inject category buttons -->
-      <button class="btn btn-outline-danger category-btn active-cat" data-target="#menu">All</button>
-    </div>
-  </section>
-
-  <!-- No Results -->
-  <section class="container">
-    <div id="noResults" class="alert alert-warning d-none" role="alert">
-      No results found. Try a different keyword.
-    </div>
-  </section>
-
-  <!-- Menu (Dynamic) -->
-  <section id="menu" class="container my-5">
-    <div id="menuSections">
-      <!-- JS will inject category sections + cards -->
-    </div>
-  </section>
+  <!-- SPA Root -->
+  <main id="app"></main>
 
   <!-- Footer -->
   <footer class="bg-dark text-white mt-5">
     <div class="container py-4 d-flex flex-column flex-md-row justify-content-between align-items-center">
       <p class="mb-2 mb-md-0">© 2026 FoodOrder. All rights reserved.</p>
       <div class="d-flex gap-3">
-        <a class="text-white text-decoration-none" href="#">Privacy</a>
-        <a class="text-white text-decoration-none" href="#">Terms</a>
-        <a class="text-white text-decoration-none" href="#">Support</a>
+        <a class="text-white text-decoration-none" href="#/home">Home</a>
+        <a class="text-white text-decoration-none" href="#/order">Cart</a>
+        <a class="text-white text-decoration-none" href="#/home?scroll=menu">Menu</a>
       </div>
     </div>
   </footer>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <!-- Your JS -->
-   <script src="assets/js/data.js"></script>
+
+  <!-- MUST load data.js BEFORE main.js -->
+  <script src="assets/js/data.js"></script>
   <script src="assets/js/main.js"></script>
 </body>
 </html>
