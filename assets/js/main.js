@@ -59,6 +59,82 @@ function escapeHtml(str) {
 }
 
 // -------------------------
+// Theme (light/dark)
+// -------------------------
+const THEME_KEY = "theme";
+
+function normalizeTheme(value) {
+  return value === "dark" || value === "light" ? value : null;
+}
+
+function getStoredTheme() {
+  try {
+    return normalizeTheme(localStorage.getItem(THEME_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function getPreferredTheme() {
+  if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    return "dark";
+  }
+  return "light";
+}
+
+function updateThemeToggle(theme) {
+  const toggle = document.getElementById("themeToggle");
+  if (!toggle) return;
+
+  const isDark = theme === "dark";
+  toggle.setAttribute("aria-pressed", isDark ? "true" : "false");
+
+  const label = toggle.querySelector(".theme-label");
+  if (label) {
+    label.textContent = isDark ? "Light" : "Dark";
+  } else {
+    toggle.textContent = isDark ? "Light mode" : "Dark mode";
+  }
+}
+
+function applyTheme(theme) {
+  const root = document.documentElement;
+  root.setAttribute("data-theme", theme);
+  root.setAttribute("data-bs-theme", theme);
+  updateThemeToggle(theme);
+}
+
+function initTheme() {
+  const stored = getStoredTheme();
+  const theme = stored || getPreferredTheme();
+  applyTheme(theme);
+
+  const toggle = document.getElementById("themeToggle");
+  if (toggle) {
+    toggle.addEventListener("click", () => {
+      const current = document.documentElement.getAttribute("data-theme") || theme;
+      const next = current === "dark" ? "light" : "dark";
+      try {
+        localStorage.setItem(THEME_KEY, next);
+      } catch {
+        // ignore storage errors
+      }
+      applyTheme(next);
+    });
+  }
+
+  const media = window.matchMedia?.("(prefers-color-scheme: dark)");
+  if (!stored && media) {
+    const handler = (e) => applyTheme(e.matches ? "dark" : "light");
+    if (media.addEventListener) {
+      media.addEventListener("change", handler);
+    } else if (media.addListener) {
+      media.addListener(handler);
+    }
+  }
+}
+
+// -------------------------
 // Cart (localStorage)
 // -------------------------
 const CART_KEY = "cart";
@@ -707,6 +783,8 @@ function renderApp() {
 }
 
 // Init
+initTheme();
+
 document.addEventListener("DOMContentLoaded", () => {
   loadProductsFromEmbeddedData();
 

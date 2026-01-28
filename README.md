@@ -134,13 +134,13 @@ No server / Live Server required.
 
 ## Developer Info
 
-- **Name:** Nirjon Roy  
+- **Name:** Nirjon Roy  (Backend Developer)
 - **Student ID:** 2023100010067  
 - **Department:** CSE  
 - **University:** Southeast University  
 
 ### Portfolio & Links
-- Portfolio: https://blacktechcorp.com/team/nirjon-roy  
+- Job Profile: https://blacktechcorp.com/team/nirjon-roy  
 - GitHub: https://github.com/nirjonroy  
 - LinkedIn: https://www.linkedin.com/in/softdev-nirjon-roy  
 
