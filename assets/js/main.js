@@ -380,8 +380,19 @@ function renderHomeView(params) {
     <section class="container my-4 reveal">
       <div class="row g-3 align-items-center">
         <div class="col-12 col-md-8 mx-auto">
-          <input id="searchInput" class="form-control form-control-lg" type="text"
-            placeholder="Search for food..." value="${escapeHtml(q)}">
+          <div class="search-shell">
+            <div class="search-field">
+              <span class="search-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="7"></circle>
+                  <path d="M21 21l-4.3-4.3"></path>
+                </svg>
+              </span>
+              <input id="searchInput" class="form-control form-control-lg search-input" type="text"
+                placeholder="Search for food..." value="${escapeHtml(q)}" autocomplete="off">
+            </div>
+            <div id="searchSuggestions" class="search-suggestions d-none" role="listbox" aria-label="Search suggestions"></div>
+          </div>
         </div>
       </div>
 
@@ -674,6 +685,41 @@ function setupSearchFilterWithURL() {
 
   const items = Array.from(document.querySelectorAll(".food-item"));
   const noResults = document.getElementById("noResults");
+  const suggestions = document.getElementById("searchSuggestions");
+
+  function updateSuggestions(query) {
+    if (!suggestions) return;
+    const trimmed = query.trim().toLowerCase();
+
+    if (!trimmed) {
+      suggestions.innerHTML = "";
+      suggestions.classList.add("d-none");
+      return;
+    }
+
+    const matches = PRODUCTS.filter((p) => p.name.toLowerCase().includes(trimmed)).slice(0, 6);
+
+    if (!matches.length) {
+      suggestions.innerHTML = `<div class="suggestion-empty">No matches found</div>`;
+      suggestions.classList.remove("d-none");
+      return;
+    }
+
+    suggestions.innerHTML = matches
+      .map(
+        (p) => `
+        <button type="button" class="suggestion-item" data-id="${p.id}">
+          <img src="${p.image}" alt="" class="suggestion-thumb">
+          <span class="suggestion-meta">
+            <span class="suggestion-title">${escapeHtml(p.name)}</span>
+            <span class="suggestion-sub">${escapeHtml(p.category)} • ${formatMoney(p.price)}</span>
+          </span>
+        </button>
+      `
+      )
+      .join("");
+    suggestions.classList.remove("d-none");
+  }
 
   function apply() {
     const query = input.value.trim().toLowerCase();
@@ -698,9 +744,26 @@ function setupSearchFilterWithURL() {
     });
 
     noResults?.classList.toggle("d-none", visible !== 0);
+    updateSuggestions(query);
   }
 
   input.addEventListener("input", apply);
+  input.addEventListener("focus", () => updateSuggestions(input.value));
+  input.addEventListener("blur", () => {
+    if (!suggestions) return;
+    setTimeout(() => suggestions.classList.add("d-none"), 150);
+  });
+
+  suggestions?.addEventListener("click", (e) => {
+    const item = e.target.closest(".suggestion-item");
+    if (!item) return;
+    const p = PRODUCTS_MAP[item.dataset.id];
+    if (!p) return;
+    input.value = p.name;
+    apply();
+    input.focus();
+    suggestions.classList.add("d-none");
+  });
 
   // Run once (so "No results" works on reload)
   apply();
