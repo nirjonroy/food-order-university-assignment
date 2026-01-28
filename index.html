@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FoodOrder</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap"
+    rel="stylesheet"
+  />
+
   <!-- Bootstrap CSS -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
@@ -17,8 +24,11 @@
 
 <body>
   <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-danger px-4">
-    <a class="navbar-brand fw-bold" href="#/home">FoodOrder</a>
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-hero px-4 py-3 sticky-top">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#/home">
+      <span class="brand-mark">FO</span>
+      <span class="brand-text">FoodOrder</span>
+    </a>
 
     <button
       class="navbar-toggler"
@@ -35,15 +45,15 @@
     <div class="collapse navbar-collapse" id="navMenu">
       <ul class="navbar-nav ms-auto gap-2 align-items-lg-center">
         <li class="nav-item">
-          <a class="nav-link" href="#/home" data-nav="home">Home</a>
+          <a class="nav-link nav-pill" href="#/home" data-nav="home">Home</a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link" href="#/home?scroll=menu" data-nav="menu">Menu</a>
+          <a class="nav-link nav-pill" href="#/home?scroll=menu" data-nav="menu">Menu</a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link" href="#/order" data-nav="order">
+          <a class="nav-link nav-pill" href="#/order" data-nav="order">
             Cart <span class="badge bg-light text-danger ms-1" id="cartCount">0</span>
           </a>
         </li>

@@ -254,19 +254,33 @@ function renderHomeView(params) {
 
   app.innerHTML = `
     <!-- Hero -->
-    <section class="container my-4">
-      <div id="heroCarousel" class="carousel slide rounded overflow-hidden" data-bs-ride="carousel">
-        <div class="carousel-indicators" id="heroIndicators"></div>
-        <div class="carousel-inner" id="heroCarouselInner"></div>
+    <section class="container my-4 hero-section">
+      <div class="hero-card">
+        <div class="hero-header">
+          <div>
+            <span class="hero-kicker">Freshly prepared • Fast delivery</span>
+            <h1 class="hero-title">Order your favorites, faster.</h1>
+            <p class="hero-subtitle">Curated meals from the best kitchens around you.</p>
+          </div>
+          <div class="hero-cta">
+            <a class="btn btn-danger btn-sm" href="#/home?scroll=menu">Explore menu</a>
+            <a class="btn btn-outline-danger btn-sm" href="#/order">View cart</a>
+          </div>
+        </div>
 
-        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-          <span class="carousel-control-prev-icon"></span>
-          <span class="visually-hidden">Previous</span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-          <span class="carousel-control-next-icon"></span>
-          <span class="visually-hidden">Next</span>
-        </button>
+        <div id="heroCarousel" class="carousel slide hero-carousel" data-bs-ride="carousel">
+          <div class="carousel-indicators" id="heroIndicators"></div>
+          <div class="carousel-inner" id="heroCarouselInner"></div>
+
+          <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -418,18 +432,22 @@ function renderHeroSlider() {
 
   indicators.innerHTML = slides
     .map((_, idx) =>
-      `<button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="${idx}" class="${idx === 0 ? "active" : ""}"></button>`
+      `<button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="${idx}" class="${idx === 0 ? "active" : ""}" aria-label="Slide ${idx + 1}"></button>`
     )
     .join("");
 
   inner.innerHTML = slides
     .map((p, idx) => `
       <div class="carousel-item ${idx === 0 ? "active" : ""}">
-        <img src="${p.image}" class="d-block w-100" alt="${escapeHtml(p.name)}"
-             style="height:320px; object-fit:cover;">
-        <div class="carousel-caption d-none d-md-block">
-          <h3 class="fw-bold">${escapeHtml(p.name)}</h3>
-          <p>${escapeHtml(p.category)} • ${formatMoney(p.price)}</p>
+        <div class="hero-media">
+          <img src="${p.image}" class="d-block w-100 hero-image" alt="${escapeHtml(p.name)}">
+          <div class="hero-gradient"></div>
+        </div>
+        <div class="carousel-caption hero-caption d-none d-md-block text-start">
+          <span class="hero-tag">Chef's pick</span>
+          <h3 class="fw-bold mb-2">${escapeHtml(p.name)}</h3>
+          <p class="hero-meta mb-3">${escapeHtml(p.category)} • ${formatMoney(p.price)}</p>
+          <a class="btn btn-light btn-sm hero-cta-btn" href="#/product?id=${encodeURIComponent(p.id)}">View details</a>
         </div>
       </div>
     `)

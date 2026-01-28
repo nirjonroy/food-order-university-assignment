@@ -16,6 +16,18 @@
   --app-toggle-border: rgba(255, 255, 255, 0.7);
   --app-toggle-text: #ffffff;
   --app-nav-shadow: 0 8px 22px rgba(220, 53, 69, 0.25);
+  --app-font-base: "Manrope", "Segoe UI", sans-serif;
+  --app-font-display: "Playfair Display", "Times New Roman", serif;
+  --app-nav-bg: linear-gradient(120deg, #dc3545 0%, #c02b3a 45%, #a31527 100%);
+  --app-nav-border: rgba(255, 255, 255, 0.22);
+  --app-nav-pill: rgba(255, 255, 255, 0.18);
+  --app-nav-pill-hover: rgba(255, 255, 255, 0.3);
+  --app-hero-card: rgba(255, 255, 255, 0.92);
+  --app-hero-card-border: rgba(255, 255, 255, 0.6);
+  --app-hero-caption-bg: rgba(15, 23, 42, 0.55);
+  --app-hero-caption-text: #f8fafc;
+  --app-hero-pill-bg: rgba(255, 255, 255, 0.18);
+  --app-hero-pill-text: #f8fafc;
 }
 
 [data-theme="dark"] {
@@ -36,12 +48,32 @@
   --app-toggle-border: rgba(255, 255, 255, 0.35);
   --app-toggle-text: #f8fafc;
   --app-nav-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
+  --app-nav-bg: linear-gradient(120deg, #b91c1c 0%, #7f1d1d 45%, #4c0519 100%);
+  --app-nav-border: rgba(255, 255, 255, 0.12);
+  --app-nav-pill: rgba(255, 255, 255, 0.12);
+  --app-nav-pill-hover: rgba(255, 255, 255, 0.2);
+  --app-hero-card: rgba(17, 23, 34, 0.88);
+  --app-hero-card-border: rgba(255, 255, 255, 0.08);
+  --app-hero-caption-bg: rgba(10, 15, 25, 0.7);
+  --app-hero-caption-text: #f8fafc;
+  --app-hero-pill-bg: rgba(255, 255, 255, 0.2);
+  --app-hero-pill-text: #f8fafc;
 }
 
 body {
   background: radial-gradient(1200px circle at 10% 0%, var(--app-bg-accent) 0%, var(--app-bg) 45%, var(--app-bg) 100%);
   color: var(--app-text);
+  font-family: var(--app-font-base);
   min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+.navbar-brand,
+.hero-title {
+  font-family: var(--app-font-display);
+  letter-spacing: 0.4px;
 }
 
 a {
@@ -60,6 +92,60 @@ a:hover {
   box-shadow: var(--app-nav-shadow);
 }
 
+.navbar-hero {
+  background: var(--app-nav-bg);
+  border-bottom: 1px solid var(--app-nav-border);
+}
+
+.navbar-hero .navbar-brand {
+  font-size: 1.35rem;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.15);
+}
+
+.brand-text {
+  font-weight: 700;
+}
+
+.nav-pill {
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.nav-pill:hover,
+.nav-pill.active {
+  background: var(--app-nav-pill-hover);
+  color: #ffffff;
+}
+
+.navbar-hero .badge {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.navbar-hero .navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.navbar-hero .navbar-toggler:focus {
+  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+}
+
 .theme-toggle {
   background: var(--app-toggle-bg);
   border-color: var(--app-toggle-border);
@@ -67,6 +153,9 @@ a:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  border-radius: 999px;
+  font-weight: 600;
+  padding: 0.35rem 0.85rem;
 }
 
 .theme-toggle:hover {
@@ -121,6 +210,139 @@ a:hover {
   background: var(--app-hero);
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
+}
+
+.hero-section {
+  position: relative;
+}
+
+.hero-card {
+  background: var(--app-hero-card);
+  border: 1px solid var(--app-hero-card-border);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: var(--app-shadow);
+  backdrop-filter: blur(10px);
+}
+
+.hero-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.hero-kicker {
+  font-size: 0.85rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--app-muted);
+  font-weight: 600;
+}
+
+.hero-title {
+  margin: 0.25rem 0;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+}
+
+.hero-subtitle {
+  margin: 0;
+  color: var(--app-muted);
+  max-width: 28rem;
+}
+
+.hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.hero-carousel {
+  border-radius: 1.25rem;
+  overflow: hidden;
+}
+
+.hero-media {
+  position: relative;
+}
+
+.hero-image {
+  height: clamp(260px, 42vw, 380px);
+  object-fit: cover;
+}
+
+.hero-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(15, 23, 42, 0.25) 0%, rgba(15, 23, 42, 0.05) 50%, rgba(15, 23, 42, 0.35) 100%);
+}
+
+.hero-caption {
+  background: var(--app-hero-caption-bg);
+  color: var(--app-hero-caption-text);
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  box-shadow: var(--app-shadow);
+  backdrop-filter: blur(6px);
+  max-width: 20rem;
+  left: 1.5rem;
+  right: auto;
+  bottom: 1.5rem;
+}
+
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: var(--app-hero-pill-bg);
+  color: var(--app-hero-pill-text);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 0.6rem;
+}
+
+.hero-meta {
+  color: rgba(248, 250, 252, 0.85);
+}
+
+.hero-cta-btn {
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+#heroCarousel .carousel-indicators [data-bs-target] {
+  width: 28px;
+  height: 4px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+#heroCarousel .carousel-indicators .active {
+  background-color: #ffffff;
+}
+
+#heroCarousel .carousel-control-prev,
+#heroCarousel .carousel-control-next {
+  width: 3.25rem;
+}
+
+#heroCarousel .carousel-control-prev-icon,
+#heroCarousel .carousel-control-next-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  background-size: 60% 60%;
+  background-color: rgba(15, 23, 42, 0.45);
+}
+
+@media (min-width: 992px) {
+  .hero-header {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
 }
 
 hr {
