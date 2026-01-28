@@ -269,7 +269,10 @@ function renderProductView(params) {
 
           <div class="d-flex gap-2 mt-4">
             <button class="btn btn-outline-secondary add-cart" data-id="${p.id}">Add to Cart</button>
-            <a class="btn btn-danger" href="#/order">Go to Cart</a>
+            <a class="btn btn-danger order-now" href="#/order" data-id="${p.id}">
+  Order Now
+</a>
+
           </div>
         </div>
       </div>
@@ -640,6 +643,25 @@ function mountOrderLogic() {
 // =====================================================
 document.addEventListener("click", (e) => {
   const addBtn = e.target.closest(".add-cart");
+  // Order Now (product page)
+const orderNowBtn = e.target.closest(".order-now");
+if (orderNowBtn) {
+  const id = orderNowBtn.dataset.id;
+  const p = PRODUCTS_MAP[id];
+  if (!p) return;
+
+  addToCart({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    img: p.image,
+  });
+
+  // navigation already happens via href="#/order"
+  return;
+}
+
+
   if (addBtn) {
     const id = addBtn.dataset.id;
     const p = PRODUCTS_MAP[id];
