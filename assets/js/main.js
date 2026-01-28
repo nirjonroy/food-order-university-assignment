@@ -183,6 +183,69 @@ function hidePageLoader() {
 }
 
 // -------------------------
+// Visitor tracking (server-backed)
+// -------------------------
+function getApiBase() {
+  if (window.location.protocol === "file:") {
+    return "http://localhost:3000";
+  }
+  return "";
+}
+
+function logVisit() {
+  if (sessionStorage.getItem("visitLogged")) return;
+  sessionStorage.setItem("visitLogged", "true");
+
+  const base = getApiBase();
+  fetch(`${base}/api/visit`, { method: "POST" }).catch(() => {
+    // ignore logging errors
+  });
+}
+
+async function loadVisitorInsights() {
+  const panel = document.getElementById("visitorPanel");
+  if (!panel) return;
+
+  const base = getApiBase();
+
+  try {
+    const res = await fetch(`${base}/api/visits`);
+    if (!res.ok) throw new Error("Failed");
+    const data = await res.json();
+    const visits = Array.isArray(data.visits) ? data.visits : [];
+
+    if (!visits.length) {
+      panel.innerHTML = `<div class="visitor-empty">No visits recorded yet.</div>`;
+      return;
+    }
+
+    const recent = visits.slice(-6).reverse();
+
+    panel.innerHTML = `
+      <div class="visitor-list">
+        ${recent
+          .map((v) => {
+            const location = [v.city, v.region].filter(Boolean).join(", ") || "Unknown";
+            const country = v.country || "Unknown";
+            return `
+          <div class="visitor-item">
+            <div class="visitor-meta">
+              <span class="visitor-title">${escapeHtml(location)}</span>
+              <span class="visitor-sub">${escapeHtml(country)} • ${escapeHtml(v.ip || "")}</span>
+            </div>
+            <span class="visitor-time">${new Date(v.time).toLocaleString()}</span>
+          </div>
+        `;
+          })
+          .join("")}
+      </div>
+    `;
+  } catch {
+    panel.innerHTML = `<div class="visitor-empty">Run the local server to see visitor data.</div>`;
+  }
+}
+
+// -------------------------
 // Quantity picker (cards + product view)
 // -------------------------
 function getQtyFromPicker(picker) {
@@ -420,6 +483,94 @@ function renderHomeView(params) {
       <div id="noResults" class="alert alert-warning d-none">No results found. Try a different keyword.</div>
     </section>
 
+    <!-- Why Choose Us -->
+    <section class="container my-5">
+      <div class="section-head reveal">
+        <span class="section-kicker">Why Choose Us</span>
+        <h2>Delicious food, delivered the smart way.</h2>
+        <p class="text-muted">We focus on quality, speed, and a seamless experience from menu to doorstep.</p>
+      </div>
+      <div class="row g-4 mt-2" data-reveal-stagger="true">
+        <div class="col-md-4">
+          <div class="info-card reveal">
+            <h5>Fresh ingredients</h5>
+            <p class="text-muted">Handpicked kitchens and chefs use fresh, high-quality ingredients every day.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="info-card reveal">
+            <h5>Fast delivery</h5>
+            <p class="text-muted">Smart routing gets your order to you quickly, hot, and on time.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="info-card reveal">
+            <h5>Trusted service</h5>
+            <p class="text-muted">Transparent pricing and responsive support make every order worry-free.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Customer Reviews -->
+    <section class="container my-5">
+      <div class="section-head reveal">
+        <span class="section-kicker">Customer Reviews</span>
+        <h2>Loved by food lovers across the city.</h2>
+        <p class="text-muted">Real feedback from customers who order from FoodOrder every week.</p>
+      </div>
+      <div class="row g-4 mt-2" data-reveal-stagger="true">
+        <div class="col-md-4">
+          <div class="review-card reveal">
+            <div class="review-top">
+              <div>
+                <h6 class="mb-1">Nusrat Jahan</h6>
+                <span class="text-muted">Dhanmondi</span>
+              </div>
+              <div class="review-stars">★★★★★</div>
+            </div>
+            <p class="text-muted">“The food always arrives hot and perfectly packed. The menu variety is amazing.”</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="review-card reveal">
+            <div class="review-top">
+              <div>
+                <h6 class="mb-1">Arif Ahmed</h6>
+                <span class="text-muted">Gulshan</span>
+              </div>
+              <div class="review-stars">★★★★★</div>
+            </div>
+            <p class="text-muted">“Fast delivery and friendly support. FoodOrder is my go-to for dinner.”</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="review-card reveal">
+            <div class="review-top">
+              <div>
+                <h6 class="mb-1">Sadia Rahman</h6>
+                <span class="text-muted">Banani</span>
+              </div>
+              <div class="review-stars">★★★★☆</div>
+            </div>
+            <p class="text-muted">“Great taste and consistent quality. The order flow is smooth and easy.”</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visitor Insights -->
+    <section class="container my-5">
+      <div class="section-head reveal">
+        <span class="section-kicker">Visitor Insights</span>
+        <h2>Where visitors are coming from.</h2>
+        <p class="text-muted">Recent visits captured by IP-based location lookup.</p>
+      </div>
+      <div id="visitorPanel" class="visitor-panel reveal">
+        <div class="visitor-empty">Loading visitor data...</div>
+      </div>
+    </section>
+
     <!-- Menu -->
     <section id="menu" class="container my-5">
       <div id="menuSections" data-reveal-stagger="true"></div>
@@ -431,6 +582,7 @@ function renderHomeView(params) {
   renderMenuSections(cat);
   setupSearchFilterWithURL();
   setupCategoryButtonsWithURL();
+  loadVisitorInsights();
 
   // scroll helper (menu link)
   if (params.get("scroll") === "menu") {
@@ -1287,6 +1439,7 @@ initTheme();
 document.addEventListener("DOMContentLoaded", () => {
   document.body.classList.add("page-ready");
   loadProductsFromEmbeddedData();
+  logVisit();
 
   if (!window.location.hash) {
     window.location.hash = "#/home";
