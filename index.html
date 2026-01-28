@@ -3,25 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Food Order</title>
+  <title>FoodOrder</title>
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+
+  <!-- Your CSS -->
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
-<body>
 
+<body>
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-danger px-4">
     <a class="navbar-brand fw-bold" href="#/home">FoodOrder</a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navMenu"
+      aria-controls="navMenu"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="navMenu">
       <ul class="navbar-nav ms-auto gap-2 align-items-lg-center">
         <li class="nav-item"><a class="nav-link" href="#/home" data-nav="home">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="#/home#menu" data-nav="menu">Menu / Food Items</a></li>
+        <li class="nav-item"><a class="nav-link" href="#/about" data-nav="about">About</a></li>
+        <li class="nav-item"><a class="nav-link" href="#/contact" data-nav="contact">Contact</a></li>
+
         <li class="nav-item">
           <a class="nav-link" href="#/order" data-nav="order">
             Cart <span class="badge bg-light text-danger ms-1" id="cartCount">0</span>
@@ -46,8 +62,13 @@
     </div>
   </footer>
 
+  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Your JS -->
   <script src="assets/js/main.js"></script>
 </body>
 </html>
