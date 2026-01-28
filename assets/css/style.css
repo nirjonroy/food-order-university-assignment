@@ -863,6 +863,129 @@ a:hover {
   }
 }
 
+.page-layout {
+  max-width: 1100px;
+}
+
+.page-hero {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--app-link);
+}
+
+.page-hero-card {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow);
+  min-width: 220px;
+}
+
+.page-hero-card > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--app-muted);
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.info-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: var(--app-shadow);
+}
+
+.info-card h5 {
+  margin-bottom: 0.6rem;
+}
+
+.info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.info-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.info-list li span {
+  color: var(--app-muted);
+}
+
+.social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.social-link:hover {
+  background: rgba(220, 53, 69, 0.1);
+  color: var(--app-link);
+}
+
+.contact-form .btn,
+.book-form .btn {
+  border-radius: 999px;
+  font-weight: 600;
+  padding: 0.5rem 1.4rem;
+}
+
+@media (max-width: 767px) {
+  .page-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .info-list li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 hr {
   border-color: var(--app-border);
   opacity: 1;

@@ -106,7 +106,7 @@ function applyTheme(theme) {
 
 function initTheme() {
   const stored = getStoredTheme();
-  const theme = stored || getPreferredTheme();
+  const theme = stored || "dark";
   applyTheme(theme);
 
   const toggle = document.getElementById("themeToggle");
@@ -123,15 +123,6 @@ function initTheme() {
     });
   }
 
-  const media = window.matchMedia?.("(prefers-color-scheme: dark)");
-  if (!stored && media) {
-    const handler = (e) => applyTheme(e.matches ? "dark" : "light");
-    if (media.addEventListener) {
-      media.addEventListener("change", handler);
-    } else if (media.addListener) {
-      media.addListener(handler);
-    }
-  }
 }
 
 // -------------------------
@@ -326,10 +317,35 @@ function parseHash() {
   return { route, params };
 }
 
-function setActiveNav(route) {
+function setActiveNav(route, params) {
   document.querySelectorAll("[data-nav]").forEach((a) => a.classList.remove("active"));
-  if (route === "order") document.querySelector('[data-nav="order"]')?.classList.add("active");
-  else document.querySelector('[data-nav="home"]')?.classList.add("active");
+
+  if (route === "order") {
+    document.querySelector('[data-nav="order"]')?.classList.add("active");
+    return;
+  }
+
+  if (route === "about") {
+    document.querySelector('[data-nav="about"]')?.classList.add("active");
+    return;
+  }
+
+  if (route === "contact") {
+    document.querySelector('[data-nav="contact"]')?.classList.add("active");
+    return;
+  }
+
+  if (route === "book") {
+    document.querySelector('[data-nav="book"]')?.classList.add("active");
+    return;
+  }
+
+  if (route === "home" && params?.get("scroll") === "menu") {
+    document.querySelector('[data-nav="menu"]')?.classList.add("active");
+    return;
+  }
+
+  document.querySelector('[data-nav="home"]')?.classList.add("active");
 }
 
 // =====================================================
@@ -532,6 +548,260 @@ function renderOrderView() {
   `;
 
   mountOrderLogic();
+}
+
+function renderAboutView() {
+  const app = document.getElementById("app");
+  if (!app) return;
+
+  document.title = "About Us";
+
+  app.innerHTML = `
+    <section class="container my-5 page-layout">
+      <div class="page-hero reveal">
+        <div>
+          <span class="page-kicker">About FoodOrder</span>
+          <h1>Crafted meals, delivered with care.</h1>
+          <p class="text-muted">We partner with trusted kitchens to bring you a curated menu, fast delivery, and a delightful ordering experience.</p>
+        </div>
+        <div class="page-hero-card">
+          <div>
+            <span class="stat-label">Meals served</span>
+            <span class="stat-value">12K+</span>
+          </div>
+          <div>
+            <span class="stat-label">Avg delivery</span>
+            <span class="stat-value">32 min</span>
+          </div>
+          <div>
+            <span class="stat-label">Top rated</span>
+            <span class="stat-value">4.8/5</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mt-4">
+        <div class="col-lg-4">
+          <div class="info-card reveal">
+            <h5>Our mission</h5>
+            <p class="text-muted">Make ordering food feel effortless, premium, and reliable in every neighborhood we serve.</p>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="info-card reveal" data-reveal-delay="80">
+            <h5>Fresh partners</h5>
+            <p class="text-muted">We work only with kitchens that meet our quality and hygiene benchmarks.</p>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="info-card reveal" data-reveal-delay="140">
+            <h5>Real-time care</h5>
+            <p class="text-muted">From order to doorstep, we track every delivery for a smooth experience.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderContactView() {
+  const app = document.getElementById("app");
+  if (!app) return;
+
+  document.title = "Contact Us";
+
+  app.innerHTML = `
+    <section class="container my-5 page-layout">
+      <div class="page-hero reveal">
+        <div>
+          <span class="page-kicker">Contact</span>
+          <h1>We’re here to help.</h1>
+          <p class="text-muted">Questions, feedback, or partnership ideas? Send us a message and we’ll get back quickly.</p>
+        </div>
+        <div class="page-hero-card">
+          <div>
+            <span class="stat-label">Support</span>
+            <span class="stat-value">24/7</span>
+          </div>
+          <div>
+            <span class="stat-label">Email</span>
+            <span class="stat-value">roynirjon18@gmail.com</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mt-4">
+        <div class="col-lg-5">
+          <div class="info-card reveal">
+            <h5>Contact details</h5>
+            <ul class="info-list">
+              <li><span>Phone</span><strong>+880 1774-865115</strong></li>
+              <li><span>Email</span><strong>roynirjon18@gmail.com</strong></li>
+              <li><span>Address</span><strong>Dhanmondi 6A, Dhaka</strong></li>
+              <li><span>Hours</span><strong>10:00 AM - 11:00 PM</strong></li>
+            </ul>
+            <div class="social-links mt-3">
+              <a class="social-link" href="https://www.facebook.com/EngineerNirjonRoy" target="_blank" rel="noopener">Facebook</a>
+              <a class="social-link" href="https://www.linkedin.com/in/softdev-nirjon-roy/" target="_blank" rel="noopener">LinkedIn</a>
+              <a class="social-link" href="https://www.instagram.com/engineer_nirjon/" target="_blank" rel="noopener">Instagram</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="info-card reveal" data-reveal-delay="120">
+            <h5>Send a message</h5>
+            <form class="contact-form js-form" data-form="contact">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Full name</label>
+                  <input class="form-control" type="text" placeholder="Your name">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Email</label>
+                  <input class="form-control" type="email" placeholder="you@email.com">
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Message</label>
+                  <textarea class="form-control" rows="4" placeholder="Write your message..."></textarea>
+                </div>
+                <div class="col-12">
+                  <button type="submit" class="btn btn-danger">Send message</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+
+  setupFormAlerts();
+}
+
+function renderBookView() {
+  const app = document.getElementById("app");
+  if (!app) return;
+
+  document.title = "Book a Table";
+
+  app.innerHTML = `
+    <section class="container my-5 page-layout">
+      <div class="page-hero reveal">
+        <div>
+          <span class="page-kicker">Book a table</span>
+          <h1>Reserve your seat in minutes.</h1>
+          <p class="text-muted">Perfect for celebrations, group dinners, or a quick catch-up. Pick a time and we’ll confirm.</p>
+        </div>
+        <div class="page-hero-card">
+          <div>
+            <span class="stat-label">Reservations</span>
+            <span class="stat-value">Instant</span>
+          </div>
+          <div>
+            <span class="stat-label">Tables</span>
+            <span class="stat-value">2-12</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mt-4">
+        <div class="col-lg-7">
+          <div class="info-card reveal">
+            <h5>Reservation details</h5>
+            <form class="book-form js-form" data-form="book">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Full name</label>
+                  <input class="form-control" type="text" placeholder="Your name">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Phone</label>
+                  <input class="form-control" type="tel" placeholder="+880 1XXX-XXXXXX">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Date</label>
+                  <input class="form-control" type="date">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Time</label>
+                  <input class="form-control" type="time">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Guests</label>
+                  <select class="form-select">
+                    <option>2 guests</option>
+                    <option>4 guests</option>
+                    <option>6 guests</option>
+                    <option>8 guests</option>
+                    <option>10 guests</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Occasion</label>
+                  <select class="form-select">
+                    <option>Casual</option>
+                    <option>Birthday</option>
+                    <option>Anniversary</option>
+                    <option>Business</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Notes</label>
+                  <textarea class="form-control" rows="3" placeholder="Any requests or notes..."></textarea>
+                </div>
+                <div class="col-12">
+                  <button type="submit" class="btn btn-danger">Confirm booking</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="info-card reveal" data-reveal-delay="120">
+            <h5>Need help?</h5>
+            <p class="text-muted">For large group bookings or special events, contact our hospitality team.</p>
+            <ul class="info-list">
+              <li><span>Hotline</span><strong>+880 1774-865115</strong></li>
+              <li><span>Email</span><strong>roynirjon18@gmail.com</strong></li>
+              <li><span>Location</span><strong>Dhanmondi 6A, Dhaka</strong></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+
+  setupFormAlerts();
+}
+
+function setupFormAlerts() {
+  const forms = document.querySelectorAll(".js-form");
+  if (!forms.length) return;
+
+  forms.forEach((form) => {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const kind = form.dataset.form || "contact";
+      const title = kind === "book" ? "Booking submitted!" : "Message sent!";
+      const text =
+        kind === "book"
+          ? "Thanks for your reservation. We will confirm the table shortly."
+          : "Thanks for reaching out. We will get back to you soon.";
+
+      if (typeof Swal !== "undefined") {
+        Swal.fire({
+          icon: "success",
+          title,
+          text,
+          confirmButtonText: "OK",
+        });
+      } else {
+        alert(`${title}\n${text}`);
+      }
+
+      form.reset();
+    });
+  });
 }
 
 // =====================================================
@@ -974,7 +1244,7 @@ function renderApp() {
   setCartCountBadge();
 
   const { route, params } = parseHash();
-  setActiveNav(route);
+  setActiveNav(route, params);
 
   if (route === "order") {
     renderOrderView();
@@ -984,6 +1254,24 @@ function renderApp() {
 
   if (route === "product") {
     renderProductView(params);
+    initAnimations();
+    return;
+  }
+
+  if (route === "about") {
+    renderAboutView();
+    initAnimations();
+    return;
+  }
+
+  if (route === "contact") {
+    renderContactView();
+    initAnimations();
+    return;
+  }
+
+  if (route === "book") {
+    renderBookView();
     initAnimations();
     return;
   }
