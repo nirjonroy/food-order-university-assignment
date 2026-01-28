@@ -1,29 +1,35 @@
-// =====================================================
-//  Load products from local "API" file (TheMealDB format)
-//  File: assets/json/food-order.json
-// =====================================================
+/* =========================================================
+   OFFLINE-SAFE FOOD ORDER APP (NO fetch)
+   Data source: assets/js/data.js must define:
+     const RAW_MEAL_DATA = { meals: [ ... ] };
+========================================================= */
+
+// -------------------------
+// App Data
+// -------------------------
 let PRODUCTS = [];
 let PRODUCTS_MAP = {};
 
-async function loadProductsFromLocalJson() {
-  const res = await fetch("assets/json/food-order.json");
-  const data = await res.json();
-  const meals = data.meals || [];
+// Convert API-like meal data into product format
+function loadProductsFromEmbeddedData() {
+  if (typeof RAW_MEAL_DATA === "undefined" || !RAW_MEAL_DATA?.meals) {
+    console.error("RAW_MEAL_DATA is missing. Make sure assets/js/data.js is loaded before main.js");
+    PRODUCTS = [];
+    PRODUCTS_MAP = {};
+    return;
+  }
 
-  PRODUCTS = meals.map((m) => {
-    const id = m.idMeal;
-    const price = makePriceFromId(id);
+  const meals = RAW_MEAL_DATA.meals || [];
 
-    return {
-      id,
-      name: m.strMeal || "Unknown Meal",
-      category: m.strCategory || "Other",
-      image: m.strMealThumb || "",
-      description: (m.strInstructions || "Delicious meal.").slice(0, 90) + "...",
-      price,
-      raw: m, // keep original if you want later
-    };
-  });
+  PRODUCTS = meals.map((m) => ({
+    id: m.idMeal,
+    name: m.strMeal || "Unknown Meal",
+    category: m.strCategory || "Other",
+    image: m.strMealThumb || "",
+    description: ((m.strInstructions || "Delicious meal.").replace(/\s+/g, " ").trim()).slice(0, 90) + "...",
+    price: makePriceFromId(m.idMeal),
+    raw: m,
+  }));
 
   PRODUCTS_MAP = {};
   PRODUCTS.forEach((p) => (PRODUCTS_MAP[p.id] = p));
@@ -33,21 +39,33 @@ async function loadProductsFromLocalJson() {
 function makePriceFromId(idMeal) {
   const s = String(idMeal || "10");
   const last2 = Number(s.slice(-2)) || 10;
-  const price = 5 + (last2 % 11) + (last2 % 10) * 0.1; // ~ $5 - $16
+  const price = 5 + (last2 % 11) + (last2 % 10) * 0.1; // ~$5 - $16
   return Number(price.toFixed(2));
-}
-
-function slugify(str) {
-  return String(str).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
 function formatMoney(n) {
   return `$${Number(n).toFixed(2)}`;
 }
 
-// =========================
-//  Cart (localStorage)
-// =========================
+function slugify(str) {
+  return String(str)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+// -------------------------
+// Cart (localStorage)
+// -------------------------
 const CART_KEY = "cart";
 
 function getCart() {
@@ -107,9 +125,9 @@ function clearCart() {
   return [];
 }
 
-// =========================
-//  SweetAlert helpers
-// =========================
+// -------------------------
+// SweetAlert helpers
+// -------------------------
 function toastSuccess(title) {
   if (typeof Swal === "undefined") return;
   Swal.fire({
@@ -123,17 +141,24 @@ function toastSuccess(title) {
   });
 }
 
+function swalInfo(title, text = "") {
+  if (typeof Swal === "undefined") return;
+  Swal.fire({ icon: "info", title, text });
+}
+
 // =====================================================
-//  INDEX PAGE: render slider + categories + menu cards
+// INDEX PAGE: slider + categories + menu cards
 // =====================================================
 function renderIndexPage() {
   const sectionsWrap = document.getElementById("menuSections");
   const catButtonsWrap = document.getElementById("categoryButtons");
-  if (!sectionsWrap || !catButtonsWrap) return; // not on index.html
 
-  // Top categories (limit buttons to avoid too many)
+  // Not on index.html
+  if (!sectionsWrap || !catButtonsWrap) return;
+
+  // Build categories (limit buttons so UI not crowded)
   const categories = Array.from(new Set(PRODUCTS.map((p) => p.category))).sort();
-  const topCategories = categories.slice(0, 8); // show first 8
+  const topCategories = categories.slice(0, 8);
 
   // Buttons
   catButtonsWrap.innerHTML = `
@@ -141,7 +166,7 @@ function renderIndexPage() {
     ${topCategories
       .map((c) => {
         const secId = `cat-${slugify(c)}`;
-        return `<button class="btn btn-outline-danger category-btn" data-target="#${secId}">${c}</button>`;
+        return `<button class="btn btn-outline-danger category-btn" data-target="#${secId}">${escapeHtml(c)}</button>`;
       })
       .join("")}
   `;
@@ -169,18 +194,10 @@ function renderIndexPage() {
                 </a>
 
                 <div class="mt-auto d-flex gap-2">
-                  <button
-                    class="btn btn-outline-secondary w-50 btn-sm add-cart"
-                    data-id="${p.id}"
-                  >
+                  <button class="btn btn-outline-secondary w-50 btn-sm add-cart" data-id="${p.id}">
                     Add to Cart
                   </button>
-
-                  <a
-                    class="btn btn-danger w-50 btn-sm buy-now"
-                    href="order.html"
-                    data-id="${p.id}"
-                  >
+                  <a class="btn btn-danger w-50 btn-sm buy-now" href="order.html" data-id="${p.id}">
                     Buy Now
                   </a>
                 </div>
@@ -198,24 +215,26 @@ function renderIndexPage() {
     })
     .join("");
 
+  // Setup features
   setupCategoryScrollActiveAndURL();
   setupSearchFilterWithURL();
   renderHeroSlider();
 }
 
-// Slider using first 3 products
 function renderHeroSlider() {
   const inner = document.getElementById("heroCarouselInner");
   const indicators = document.getElementById("heroIndicators");
   if (!inner || !indicators) return;
 
   const slides = PRODUCTS.slice(0, 3);
-  if (slides.length === 0) return;
+  if (!slides.length) return;
 
   indicators.innerHTML = slides
     .map(
       (_, idx) =>
-        `<button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="${idx}" class="${idx === 0 ? "active" : ""}"></button>`
+        `<button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="${idx}" class="${
+          idx === 0 ? "active" : ""
+        }"></button>`
     )
     .join("");
 
@@ -236,7 +255,7 @@ function renderHeroSlider() {
 }
 
 // =====================================================
-//  PRODUCT PAGE: product.html?id=xxxx
+// PRODUCT PAGE: product.html?id=xxxx
 // =====================================================
 function renderProductPage() {
   const wrap = document.getElementById("productWrap");
@@ -246,6 +265,7 @@ function renderProductPage() {
   const id = params.get("id");
 
   if (!id || !PRODUCTS_MAP[id]) {
+    document.title = "Product Not Found";
     wrap.innerHTML = `
       <div class="col-12">
         <div class="alert alert-danger">Product not found.</div>
@@ -261,7 +281,8 @@ function renderProductPage() {
   wrap.innerHTML = `
     <div class="col-12 col-md-6">
       <img src="${p.image}" alt="${escapeHtml(p.name)}"
-        class="img-fluid rounded border" style="width:100%; max-height:420px; object-fit:cover;">
+        class="img-fluid rounded border"
+        style="width:100%; max-height:420px; object-fit:cover;">
     </div>
 
     <div class="col-12 col-md-6">
@@ -279,7 +300,7 @@ function renderProductPage() {
 }
 
 // =====================================================
-//  ORDER PAGE
+// ORDER PAGE
 // =====================================================
 function renderOrderPage() {
   const orderItemsDiv = document.getElementById("orderItems");
@@ -290,7 +311,6 @@ function renderOrderPage() {
   const deliveryEl = document.getElementById("delivery");
   const taxEl = document.getElementById("tax");
   const totalEl = document.getElementById("total");
-
   const placeBtn = document.getElementById("placeOrderBtn");
   const clearBtn = document.getElementById("clearCartBtn");
 
@@ -300,7 +320,7 @@ function renderOrderPage() {
   function calcTotals(cart) {
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
     const tax = subtotal * taxRate;
-    const delivery = cart.length > 0 ? deliveryFee : 0;
+    const delivery = cart.length ? deliveryFee : 0;
     const total = subtotal + delivery + tax;
 
     subtotalEl.textContent = formatMoney(subtotal);
@@ -312,14 +332,14 @@ function renderOrderPage() {
   function render(cart) {
     setCartCountBadge();
 
-    if (cart.length === 0) {
+    if (!cart.length) {
       orderItemsDiv.innerHTML = "";
-      emptyMsg.classList.remove("d-none");
+      emptyMsg?.classList.remove("d-none");
       calcTotals(cart);
       return;
     }
 
-    emptyMsg.classList.add("d-none");
+    emptyMsg?.classList.add("d-none");
 
     orderItemsDiv.innerHTML = cart
       .map(
@@ -350,10 +370,10 @@ function renderOrderPage() {
     calcTotals(cart);
   }
 
-  // initial
+  // initial render
   render(getCart());
 
-  // actions
+  // quantity/remove actions
   orderItemsDiv.addEventListener("click", (e) => {
     const minus = e.target.closest(".qty-minus");
     const plus = e.target.closest(".qty-plus");
@@ -362,18 +382,18 @@ function renderOrderPage() {
     if (minus) {
       const id = minus.dataset.id;
       const cart = getCart();
-      const item = cart.find((x) => x.id === id);
-      if (!item) return;
-      render(updateQty(id, item.qty - 1));
+      const it = cart.find((x) => x.id === id);
+      if (!it) return;
+      render(updateQty(id, it.qty - 1));
       return;
     }
 
     if (plus) {
       const id = plus.dataset.id;
       const cart = getCart();
-      const item = cart.find((x) => x.id === id);
-      if (!item) return;
-      render(updateQty(id, item.qty + 1));
+      const it = cart.find((x) => x.id === id);
+      if (!it) return;
+      render(updateQty(id, it.qty + 1));
       return;
     }
 
@@ -382,7 +402,6 @@ function renderOrderPage() {
     }
   });
 
-  // clear cart
   clearBtn?.addEventListener("click", () => {
     Swal.fire({
       icon: "warning",
@@ -399,11 +418,10 @@ function renderOrderPage() {
     });
   });
 
-  // place order
   placeBtn?.addEventListener("click", () => {
     const cart = getCart();
     if (!cart.length) {
-      Swal.fire({ icon: "info", title: "Cart empty", text: "Add items from Home." });
+      swalInfo("Cart empty", "Add items from Home.");
       return;
     }
 
@@ -414,12 +432,14 @@ function renderOrderPage() {
       confirmButtonText: "OK",
     }).then(() => {
       render(clearCart());
+      // optional: redirect
+      // window.location.href = "index.html";
     });
   });
 }
 
 // =====================================================
-//  Search filter + persist q in URL + no results
+// Search filter + persist q in URL (index page only)
 // =====================================================
 function setupSearchFilterWithURL() {
   const input = document.getElementById("searchInput");
@@ -428,7 +448,7 @@ function setupSearchFilterWithURL() {
   const items = Array.from(document.querySelectorAll(".food-item"));
   const noResults = document.getElementById("noResults");
 
-  // restore from URL
+  // restore q
   const url = new URL(window.location.href);
   const q = url.searchParams.get("q") || "";
   input.value = q;
@@ -436,7 +456,7 @@ function setupSearchFilterWithURL() {
   function apply() {
     const query = input.value.trim().toLowerCase();
 
-    // persist in URL
+    // persist to URL (works on file:// too)
     const u = new URL(window.location.href);
     if (!query) u.searchParams.delete("q");
     else u.searchParams.set("q", query);
@@ -459,13 +479,13 @@ function setupSearchFilterWithURL() {
 }
 
 // =====================================================
-//  Category buttons: scroll + active + persist cat in URL
+// Category scroll + active + persist cat in URL
 // =====================================================
 function setupCategoryScrollActiveAndURL() {
   const btns = document.querySelectorAll(".category-btn");
   if (!btns.length) return;
 
-  // restore active from URL
+  // restore active
   const u = new URL(window.location.href);
   const cat = u.searchParams.get("cat");
   if (cat) {
@@ -479,10 +499,9 @@ function setupCategoryScrollActiveAndURL() {
 
       const target = btn.dataset.target;
       if (target) {
-        // persist to URL
-        const u = new URL(window.location.href);
-        u.searchParams.set("cat", target);
-        history.replaceState({}, "", u.toString());
+        const u2 = new URL(window.location.href);
+        u2.searchParams.set("cat", target);
+        history.replaceState({}, "", u2.toString());
 
         document.querySelector(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
@@ -496,14 +515,12 @@ function setActiveCategoryButton(btn) {
     b.classList.add("btn-outline-danger");
   });
 
-  if (btn) {
-    btn.classList.remove("btn-outline-danger");
-    btn.classList.add("btn-danger");
-  }
+  btn?.classList.remove("btn-outline-danger");
+  btn?.classList.add("btn-danger");
 }
 
 // =====================================================
-//  Global click: Add to Cart / Buy Now
+// Global click: Add / Buy (all pages)
 // =====================================================
 document.addEventListener("click", (e) => {
   const addBtn = e.target.closest(".add-cart");
@@ -524,31 +541,20 @@ document.addEventListener("click", (e) => {
     if (!p) return;
 
     addToCart({ id: p.id, name: p.name, price: p.price, img: p.image });
-    // link navigates naturally to order.html
+    // navigation happens naturally via link
   }
 });
 
 // =====================================================
-//  Utilities
+// Init
 // =====================================================
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-// =====================================================
-//  Init
-// =====================================================
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   setCartCountBadge();
 
-  // load data once, then render whichever page is open
-  await loadProductsFromLocalJson();
+  // Load products from embedded data.js (OFFLINE SAFE)
+  loadProductsFromEmbeddedData();
 
+  // Render correct page
   renderIndexPage();
   renderProductPage();
   renderOrderPage();
