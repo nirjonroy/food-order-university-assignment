@@ -179,13 +179,74 @@ a:hover {
 }
 
 .food-item .card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+  border-radius: 1.1rem;
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.food-item .card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 1.1rem;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 
 .food-item .card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(220, 53, 69, 0.4);
-  box-shadow: var(--app-shadow);
+  transform: translateY(-6px);
+  border-color: rgba(220, 53, 69, 0.45);
+  box-shadow: 0 18px 36px rgba(17, 24, 39, 0.18);
+}
+
+.food-item .card:hover::after {
+  opacity: 1;
+}
+
+.food-item .card-img-top {
+  height: 190px;
+  object-fit: cover;
+}
+
+.food-item .card-body {
+  padding: 1.1rem 1.1rem 1.2rem;
+  gap: 0.6rem;
+}
+
+.food-item .card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--app-text);
+  margin-bottom: 0.4rem;
+}
+
+.food-item .card-text {
+  color: var(--app-muted);
+  line-height: 1.4;
+  min-height: 2.8em;
+}
+
+.food-item .card-body .fw-bold {
+  font-size: 1.1rem;
+}
+
+.food-item .btn {
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.food-item .btn-outline-secondary {
+  border-color: rgba(99, 102, 241, 0.35);
+  color: #4b5563;
+}
+
+[data-theme="dark"] .food-item .btn-outline-secondary {
+  color: #e5e7eb;
+  border-color: rgba(148, 163, 184, 0.4);
 }
 
 .form-control,
