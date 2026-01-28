@@ -378,12 +378,15 @@ function renderOrderView() {
   document.title = "Order Details";
 
   app.innerHTML = `
-    <main class="container my-5">
-      <h1 class="mb-4">Order Details</h1>
+    <main class="container my-5 order-page">
+      <div class="order-title">
+        <h1>Order Details</h1>
+        <p class="text-muted">Review your items and confirm your delivery.</p>
+      </div>
 
-      <div class="row g-4">
+      <div class="row g-4 align-items-start">
         <div class="col-lg-8">
-          <div class="card">
+          <div class="card order-card">
             <div class="card-header fw-bold">Order Summary</div>
             <div class="card-body">
               <div id="orderItems" class="d-flex flex-column gap-3"></div>
@@ -393,16 +396,16 @@ function renderOrderView() {
         </div>
 
         <div class="col-lg-4">
-          <div class="card">
+          <div class="card order-card pricing-card">
             <div class="card-header fw-bold">Pricing</div>
             <div class="card-body">
-              <div class="d-flex justify-content-between"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
-              <div class="d-flex justify-content-between"><span>Delivery</span><span id="delivery">$0.00</span></div>
-              <div class="d-flex justify-content-between"><span>Tax</span><span id="tax">$0.00</span></div>
+              <div class="d-flex justify-content-between price-row"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
+              <div class="d-flex justify-content-between price-row"><span>Delivery</span><span id="delivery">$0.00</span></div>
+              <div class="d-flex justify-content-between price-row"><span>Tax</span><span id="tax">$0.00</span></div>
 
               <hr>
 
-              <div class="d-flex justify-content-between fw-bold fs-5"><span>Total</span><span id="total">$0.00</span></div>
+              <div class="d-flex justify-content-between fw-bold fs-5 total-row"><span>Total</span><span id="total">$0.00</span></div>
 
               <div class="d-grid gap-2 mt-3">
                 <button class="btn btn-danger" id="placeOrderBtn">Place Order</button>
@@ -639,10 +642,9 @@ function mountOrderLogic() {
     orderItemsDiv.innerHTML = cart
       .map(
         (item) => `
-        <div class="border rounded p-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-          <div class="d-flex align-items-center gap-3">
-            <img src="${item.img}" alt="${escapeHtml(item.name)}"
-              style="width:80px;height:80px;object-fit:cover" class="rounded">
+        <div class="order-item">
+          <div class="order-item-main">
+            <img src="${item.img}" alt="${escapeHtml(item.name)}" class="order-item-img">
             <div>
               <h6 class="mb-1">${escapeHtml(item.name)}</h6>
               <div class="text-muted small">Price: ${formatMoney(item.price)}</div>
@@ -650,13 +652,15 @@ function mountOrderLogic() {
             </div>
           </div>
 
-          <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-outline-secondary btn-sm qty-minus" data-id="${item.id}">−</button>
-            <span class="fw-bold px-2" style="min-width: 28px; text-align:center;">${item.qty}</span>
-            <button class="btn btn-outline-secondary btn-sm qty-plus" data-id="${item.id}">+</button>
-          </div>
+          <div class="order-item-actions">
+            <div class="qty-stepper">
+              <button class="btn btn-outline-secondary btn-sm qty-minus" data-id="${item.id}">−</button>
+              <span>${item.qty}</span>
+              <button class="btn btn-outline-secondary btn-sm qty-plus" data-id="${item.id}">+</button>
+            </div>
 
-          <button class="btn btn-outline-danger btn-sm remove-item" data-id="${item.id}">Remove</button>
+            <button class="btn btn-outline-danger btn-sm remove-item" data-id="${item.id}">Remove</button>
+          </div>
         </div>
       `
       )
