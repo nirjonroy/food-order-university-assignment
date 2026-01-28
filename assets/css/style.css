@@ -28,6 +28,10 @@
   --app-hero-caption-text: #f8fafc;
   --app-hero-pill-bg: rgba(255, 255, 255, 0.18);
   --app-hero-pill-text: #f8fafc;
+  --motion-fast: 180ms;
+  --motion-med: 420ms;
+  --motion-slow: 700ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-theme="dark"] {
@@ -65,6 +69,54 @@ body {
   color: var(--app-text);
   font-family: var(--app-font-base);
   min-height: 100vh;
+}
+
+.page-ready .navbar-hero {
+  animation: navDrop var(--motion-med) var(--ease-out) both;
+}
+
+.page-loader {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(1200px circle at 10% 0%, var(--app-bg-accent) 0%, var(--app-bg) 45%, var(--app-bg) 100%);
+  z-index: 2000;
+  transition: opacity var(--motion-med) var(--ease-out), visibility var(--motion-med) var(--ease-out);
+}
+
+.page-loader.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.loader-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1.25rem;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow);
+}
+
+.loader-media {
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.loader-text {
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-muted);
+  font-size: 0.75rem;
 }
 
 h1,
@@ -181,6 +233,18 @@ a:hover {
   color: var(--app-text);
   border-color: var(--app-border);
   box-shadow: var(--app-shadow);
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity var(--motion-med) var(--ease-out), transform var(--motion-med) var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .card-header {
@@ -413,6 +477,29 @@ a:hover {
     flex-direction: row;
     align-items: flex-end;
     justify-content: space-between;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .page-ready .navbar-hero {
+    animation: none;
+  }
+}
+
+@keyframes navDrop {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

@@ -135,6 +135,63 @@ function initTheme() {
 }
 
 // -------------------------
+// Animations
+// -------------------------
+let revealObserver = null;
+
+function applyRevealDelays() {
+  document.querySelectorAll("[data-reveal-delay]").forEach((el) => {
+    const delay = Number.parseInt(el.dataset.revealDelay, 10);
+    if (!Number.isNaN(delay)) {
+      el.style.setProperty("--reveal-delay", `${delay}ms`);
+    }
+  });
+
+  document.querySelectorAll("[data-reveal-stagger]").forEach((group) => {
+    const items = group.querySelectorAll(".reveal");
+    items.forEach((el, idx) => {
+      const delay = Math.min(idx, 8) * 70;
+      el.style.setProperty("--reveal-delay", `${delay}ms`);
+    });
+  });
+}
+
+function initAnimations() {
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion) {
+    document.querySelectorAll(".reveal").forEach((el) => el.classList.add("reveal-visible"));
+    return;
+  }
+
+  applyRevealDelays();
+
+  if (revealObserver) {
+    revealObserver.disconnect();
+  }
+
+  revealObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("reveal-visible");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.15 }
+  );
+
+  document.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
+}
+
+function hidePageLoader() {
+  const loader = document.getElementById("pageLoader");
+  if (!loader) return;
+  loader.classList.add("is-hidden");
+  setTimeout(() => loader.remove(), 500);
+}
+
+// -------------------------
 // Cart (localStorage)
 // -------------------------
 const CART_KEY = "cart";
@@ -254,7 +311,7 @@ function renderHomeView(params) {
 
   app.innerHTML = `
     <!-- Hero -->
-    <section class="container my-4 hero-section">
+    <section class="container my-4 hero-section reveal">
       <div class="hero-card">
         <div class="hero-header">
           <div>
@@ -285,7 +342,7 @@ function renderHomeView(params) {
     </section>
 
     <!-- Search + Categories -->
-    <section class="container my-4">
+    <section class="container my-4 reveal">
       <div class="row g-3 align-items-center">
         <div class="col-12 col-md-8 mx-auto">
           <input id="searchInput" class="form-control form-control-lg" type="text"
@@ -297,13 +354,13 @@ function renderHomeView(params) {
     </section>
 
     <!-- No results -->
-    <section class="container">
+    <section class="container reveal">
       <div id="noResults" class="alert alert-warning d-none">No results found. Try a different keyword.</div>
     </section>
 
     <!-- Menu -->
     <section id="menu" class="container my-5">
-      <div id="menuSections"></div>
+      <div id="menuSections" data-reveal-stagger="true"></div>
     </section>
   `;
 
@@ -342,19 +399,19 @@ function renderProductView(params) {
 
   app.innerHTML = `
     <div class="container my-5 product-page">
-      <a href="#/home" class="text-decoration-none product-back">
+      <a href="#/home" class="text-decoration-none product-back reveal">
         <span class="product-back-icon">&larr;</span> Back to Home
       </a>
 
       <div class="row g-4 align-items-center mt-3 product-hero">
         <div class="col-12 col-lg-6">
-          <div class="product-media">
+          <div class="product-media reveal">
             <img src="${p.image}" alt="${escapeHtml(p.name)}" class="img-fluid product-image">
           </div>
         </div>
 
         <div class="col-12 col-lg-6">
-          <div class="product-info">
+          <div class="product-info reveal" data-reveal-delay="120">
             <span class="product-meta">${escapeHtml(p.category)}</span>
             <h1 class="product-title">${escapeHtml(p.name)}</h1>
             <div class="product-price">${formatMoney(p.price)}</div>
@@ -379,24 +436,24 @@ function renderOrderView() {
 
   app.innerHTML = `
     <main class="container my-5 order-page">
-      <div class="order-title">
+      <div class="order-title reveal">
         <h1>Order Details</h1>
         <p class="text-muted">Review your items and confirm your delivery.</p>
       </div>
 
       <div class="row g-4 align-items-start">
         <div class="col-lg-8">
-          <div class="card order-card">
+          <div class="card order-card reveal">
             <div class="card-header fw-bold">Order Summary</div>
             <div class="card-body">
-              <div id="orderItems" class="d-flex flex-column gap-3"></div>
+              <div id="orderItems" class="d-flex flex-column gap-3" data-reveal-stagger="true"></div>
               <p id="emptyMsg" class="text-muted mb-0 d-none">Your cart is empty. Add items from Home.</p>
             </div>
           </div>
         </div>
 
         <div class="col-lg-4">
-          <div class="card order-card pricing-card">
+          <div class="card order-card pricing-card reveal" data-reveal-delay="120">
             <div class="card-header fw-bold">Pricing</div>
             <div class="card-body">
               <div class="d-flex justify-content-between price-row"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
@@ -472,7 +529,7 @@ function renderMenuSections(activeCatId) {
 
       const cards = items.map(productCard).join("");
       return `
-        <h2 class="mb-3" id="${secId}">${escapeHtml(cat)}</h2>
+        <h2 class="mb-3 reveal" id="${secId}">${escapeHtml(cat)}</h2>
         <div class="row g-4 mb-5">${cards}</div>
       `;
     })
@@ -486,7 +543,7 @@ function renderMenuSections(activeCatId) {
 
 function productCard(p) {
   return `
-    <div class="col-12 col-sm-6 col-lg-3 food-item" data-name="${escapeHtml(p.name)}">
+    <div class="col-12 col-sm-6 col-lg-3 food-item reveal" data-name="${escapeHtml(p.name)}">
       <div class="card h-100">
         <a href="#/product?id=${encodeURIComponent(p.id)}" class="text-decoration-none text-dark">
           <img src="${p.image}" class="card-img-top" alt="${escapeHtml(p.name)}">
@@ -642,7 +699,7 @@ function mountOrderLogic() {
     orderItemsDiv.innerHTML = cart
       .map(
         (item) => `
-        <div class="order-item">
+        <div class="order-item reveal">
           <div class="order-item-main">
             <img src="${item.img}" alt="${escapeHtml(item.name)}" class="order-item-img">
             <div>
@@ -793,22 +850,26 @@ function renderApp() {
 
   if (route === "order") {
     renderOrderView();
+    initAnimations();
     return;
   }
 
   if (route === "product") {
     renderProductView(params);
+    initAnimations();
     return;
   }
 
   // default
   renderHomeView(params);
+  initAnimations();
 }
 
 // Init
 initTheme();
 
 document.addEventListener("DOMContentLoaded", () => {
+  document.body.classList.add("page-ready");
   loadProductsFromEmbeddedData();
 
   if (!window.location.hash) {
@@ -817,4 +878,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderApp();
   window.addEventListener("hashchange", renderApp);
+});
+
+window.addEventListener("load", () => {
+  hidePageLoader();
 });
