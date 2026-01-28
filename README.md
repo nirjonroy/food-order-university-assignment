@@ -134,7 +134,7 @@ No server / Live Server required.
 
 ## Developer Info
 
-- **Name:** Nirjon Roy  (Backend Developer)
+- **Name:** Nirjon Roy  
 - **Student ID:** 2023100010067  
 - **Department:** CSE  
 - **University:** Southeast University  
