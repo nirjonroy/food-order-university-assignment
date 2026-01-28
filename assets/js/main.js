@@ -341,28 +341,29 @@ function renderProductView(params) {
   document.title = p.name;
 
   app.innerHTML = `
-    <div class="container my-5">
-      <a href="#/home" class="text-decoration-none">&larr; Back to Home</a>
+    <div class="container my-5 product-page">
+      <a href="#/home" class="text-decoration-none product-back">
+        <span class="product-back-icon">&larr;</span> Back to Home
+      </a>
 
-      <div class="row g-4 align-items-center mt-2">
-        <div class="col-12 col-md-6">
-          <img src="${p.image}" alt="${escapeHtml(p.name)}"
-            class="img-fluid rounded border"
-            style="width:100%; max-height:420px; object-fit:cover;">
+      <div class="row g-4 align-items-center mt-3 product-hero">
+        <div class="col-12 col-lg-6">
+          <div class="product-media">
+            <img src="${p.image}" alt="${escapeHtml(p.name)}" class="img-fluid product-image">
+          </div>
         </div>
 
-        <div class="col-12 col-md-6">
-          <h1 class="mb-2">${escapeHtml(p.name)}</h1>
-          <div class="text-muted mb-2">${escapeHtml(p.category)}</div>
-          <div class="fs-3 fw-bold text-danger mb-3">${formatMoney(p.price)}</div>
-          <p class="text-muted">${escapeHtml(p.raw?.strInstructions || p.description)}</p>
+        <div class="col-12 col-lg-6">
+          <div class="product-info">
+            <span class="product-meta">${escapeHtml(p.category)}</span>
+            <h1 class="product-title">${escapeHtml(p.name)}</h1>
+            <div class="product-price">${formatMoney(p.price)}</div>
+            <p class="product-desc">${escapeHtml(p.raw?.strInstructions || p.description)}</p>
 
-          <div class="d-flex gap-2 mt-4">
-            <button class="btn btn-outline-secondary add-cart" data-id="${p.id}">Add to Cart</button>
-            <a class="btn btn-danger order-now" href="#/order" data-id="${p.id}">
-  Order Now
-</a>
-
+            <div class="product-actions">
+              <button class="btn btn-outline-secondary add-cart" data-id="${p.id}">Add to Cart</button>
+              <a class="btn btn-danger order-now" href="#/order" data-id="${p.id}">Order Now</a>
+            </div>
           </div>
         </div>
       </div>

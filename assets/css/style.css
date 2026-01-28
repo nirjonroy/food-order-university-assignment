@@ -116,6 +116,16 @@ a:hover {
   box-shadow: 0 10px 18px rgba(0, 0, 0, 0.15);
 }
 
+.brand-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
 .brand-text {
   font-weight: 700;
 }
@@ -404,6 +414,107 @@ a:hover {
     align-items: flex-end;
     justify-content: space-between;
   }
+}
+
+.product-page {
+  max-width: 1100px;
+}
+
+.product-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--app-link);
+  font-weight: 600;
+}
+
+.product-back-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: rgba(220, 53, 69, 0.12);
+  color: inherit;
+}
+
+.product-hero {
+  background: var(--app-hero-card);
+  border: 1px solid var(--app-hero-card-border);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: var(--app-shadow);
+}
+
+.product-media {
+  border-radius: 1.25rem;
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  background: rgba(15, 23, 42, 0.05);
+}
+
+.product-image {
+  width: 100%;
+  height: clamp(280px, 40vw, 420px);
+  object-fit: cover;
+  display: block;
+}
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.product-meta {
+  align-self: flex-start;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(220, 53, 69, 0.12);
+  color: var(--app-link);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.product-title {
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  margin: 0;
+}
+
+.product-price {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #dc3545;
+}
+
+.product-desc {
+  color: var(--app-muted);
+  line-height: 1.6;
+}
+
+.product-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.product-actions .btn {
+  border-radius: 999px;
+  font-weight: 600;
+  padding: 0.45rem 1.2rem;
+}
+
+[data-theme="dark"] .product-price {
+  color: #f87171;
+}
+
+[data-theme="dark"] .product-meta {
+  background: rgba(248, 113, 113, 0.15);
+  color: #fecaca;
 }
 
 hr {
