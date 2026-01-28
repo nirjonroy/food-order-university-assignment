@@ -1,50 +1,52 @@
 // =========================
-//  Cart (localStorage)
+//  State + Storage
 // =========================
 const CART_KEY = "cart";
-const PRODUCTS_KEY = "products_seeded_v1"; // just to seed once
+
+const PRODUCTS = [
+  { id: "pizza-1", name: "Cheese Pizza", price: 8.99, img: "assets/images/pizza.jpg", desc: "Cheesy, crispy and delicious.", category: "Pizza", section: "pizzaSection" },
+  { id: "pizza-2", name: "Pepperoni Pizza", price: 10.50, img: "assets/images/pizza2.jpg", desc: "Spicy pepperoni with melted cheese.", category: "Pizza", section: "pizzaSection" },
+  { id: "burger-1", name: "Beef Burger", price: 6.50, img: "assets/images/burger.jpg", desc: "Juicy burger with fresh toppings.", category: "Burger", section: "burgerSection" },
+  { id: "burger-2", name: "Chicken Burger", price: 5.75, img: "assets/images/burger2.jpg", desc: "Crispy chicken with soft bun.", category: "Burger", section: "burgerSection" },
+  { id: "drink-1", name: "Cold Coffee", price: 3.20, img: "assets/images/drink1.jpg", desc: "Chilled coffee with ice.", category: "Drinks", section: "drinksSection" },
+  { id: "dessert-1", name: "Chocolate Cake", price: 4.10, img: "assets/images/dessert1.jpg", desc: "Rich chocolate slice.", category: "Dessert", section: "dessertSection" },
+  { id: "biriyani-1", name: "Chicken Biriyani", price: 9.25, img: "assets/images/biriyani.jpg", desc: "Aromatic rice with spicy chicken.", category: "Biriyani", section: "biriyaniSection" },
+];
 
 function getCart() {
   try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; }
   catch { return []; }
 }
+function saveCart(cart) { localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
 
-function saveCart(cart) {
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
-}
-
-function cartCount(cart) {
-  return cart.reduce((sum, item) => sum + item.qty, 0);
-}
-
+function cartCount(cart) { return cart.reduce((s, i) => s + i.qty, 0); }
 function setCartCountBadge() {
-  const badge = document.getElementById("cartCount");
-  if (!badge) return;
-  badge.textContent = cartCount(getCart());
+  const el = document.getElementById("cartCount");
+  if (!el) return;
+  el.textContent = cartCount(getCart());
 }
 
-function addToCart(item) {
+function addToCart(prod) {
   const cart = getCart();
-  const found = cart.find((x) => x.id === item.id);
+  const found = cart.find(x => x.id === prod.id);
   if (found) found.qty += 1;
-  else cart.push({ ...item, qty: 1 });
+  else cart.push({ id: prod.id, name: prod.name, price: prod.price, img: prod.img, qty: 1 });
   saveCart(cart);
   setCartCountBadge();
-  return cart;
 }
 
 function removeFromCart(id) {
-  const cart = getCart().filter((x) => x.id !== id);
+  const cart = getCart().filter(x => x.id !== id);
   saveCart(cart);
   setCartCountBadge();
   return cart;
 }
 
-function updateQty(id, newQty) {
+function updateQty(id, qty) {
   const cart = getCart();
-  const found = cart.find((x) => x.id === id);
-  if (!found) return cart;
-  found.qty = Math.max(1, newQty);
+  const it = cart.find(x => x.id === id);
+  if (!it) return cart;
+  it.qty = Math.max(1, qty);
   saveCart(cart);
   setCartCountBadge();
   return cart;
@@ -56,9 +58,7 @@ function clearCart() {
   return [];
 }
 
-function formatMoney(n) {
-  return `$${Number(n).toFixed(2)}`;
-}
+function formatMoney(n) { return `$${Number(n).toFixed(2)}`; }
 
 // =========================
 //  SweetAlert
@@ -76,64 +76,267 @@ function toastSuccess(title) {
   });
 }
 
-function swalInfo(title, text = "") {
-  if (typeof Swal === "undefined") return;
-  Swal.fire({ icon: "info", title, text });
+// =========================
+//  Router (hash-based)
+//  Routes:
+//   #/home
+//   #/product/<id>
+//   #/order
+// =========================
+function parseRoute() {
+  const hash = window.location.hash || "#/home";
+  const [path, queryString] = hash.split("?");
+  const parts = path.replace("#", "").split("/").filter(Boolean); // ["home"] or ["product","pizza-1"]
+  const route = parts[0] || "home";
+  const param = parts[1] || null;
+
+  const params = new URLSearchParams(queryString || "");
+  return { route, param, params, rawHash: hash };
+}
+
+function navigate(hash) {
+  window.location.hash = hash;
+}
+
+function setActiveNav(route) {
+  document.querySelectorAll("[data-nav]").forEach(a => a.classList.remove("active"));
+  if (route === "order") document.querySelector('[data-nav="order"]')?.classList.add("active");
+  else document.querySelector('[data-nav="home"]')?.classList.add("active");
 }
 
 // =========================
-//  URL helpers (persist q)
+//  Views
 // =========================
-function getUrlParams() {
-  const url = new URL(window.location.href);
-  return url.searchParams;
+function productCard(p) {
+  return `
+    <div class="col-12 col-sm-6 col-lg-3 food-item" data-name="${p.name}">
+      <div class="card h-100">
+        <a href="#/product/${p.id}" class="text-decoration-none text-dark">
+          <img src="${p.img}" class="card-img-top" alt="${p.name}">
+        </a>
+
+        <div class="card-body d-flex flex-column">
+          <a href="#/product/${p.id}" class="text-decoration-none text-dark">
+            <h5 class="card-title">${p.name}</h5>
+            <p class="card-text small text-muted">${p.desc}</p>
+            <p class="fw-bold mb-3">${formatMoney(p.price)}</p>
+          </a>
+
+          <div class="mt-auto d-flex gap-2">
+            <button class="btn btn-outline-secondary w-50 btn-sm add-cart" data-id="${p.id}">
+              Add to Cart
+            </button>
+            <a class="btn btn-danger w-50 btn-sm buy-now" href="#/order" data-id="${p.id}">
+              Buy Now
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
-function setUrlParam(key, value) {
-  const url = new URL(window.location.href);
-  if (!value) url.searchParams.delete(key);
-  else url.searchParams.set(key, value);
-  history.replaceState({}, "", url.toString());
+function renderHome(params) {
+  const q = (params.get("q") || "").trim();
+  const cat = params.get("cat") || ""; // e.g. pizzaSection
+
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <section class="container my-4">
+      <div class="row g-3 align-items-center">
+        <div class="col-12 col-md-8 mx-auto">
+          <input id="searchInput" class="form-control form-control-lg" type="text"
+            placeholder="Search for food or restaurant" value="${escapeHtml(q)}" />
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
+        <button class="btn btn-outline-danger category-btn" data-section="pizzaSection">Pizza</button>
+        <button class="btn btn-outline-danger category-btn" data-section="burgerSection">Burger</button>
+        <button class="btn btn-outline-danger category-btn" data-section="drinksSection">Drinks</button>
+        <button class="btn btn-outline-danger category-btn" data-section="dessertSection">Dessert</button>
+      </div>
+    </section>
+
+    <section class="container">
+      <div id="noResults" class="alert alert-warning d-none" role="alert">
+        No results found. Try a different keyword.
+      </div>
+    </section>
+
+    <section id="menu" class="container my-5">
+      ${renderCategory("Pizza", "pizzaSection")}
+      ${renderCategory("Burger", "burgerSection")}
+      ${renderCategory("Drinks", "drinksSection")}
+      ${renderCategory("Dessert", "dessertSection")}
+      ${renderCategory("Biriyani", "biriyaniSection")}
+    </section>
+  `;
+
+  // Apply search + no-results + persist URL
+  setupSearchFilter();
+
+  // Category scroll + active button + persist URL
+  setupCategoryScroll();
+
+  // restore category highlight & scroll if cat present
+  if (cat) {
+    const btn = document.querySelector(`.category-btn[data-section="${cat}"]`);
+    if (btn) setActiveCategoryButton(btn);
+    const el = document.getElementById(cat);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function renderCategory(title, sectionId) {
+  const items = PRODUCTS.filter(p => p.section === sectionId).map(productCard).join("");
+  return `
+    <h2 class="mb-3" id="${sectionId}">${title}</h2>
+    <div class="row g-4 mb-5">${items}</div>
+  `;
+}
+
+function renderProduct(id) {
+  const app = document.getElementById("app");
+  const p = PRODUCTS.find(x => x.id === id);
+
+  if (!p) {
+    app.innerHTML = `
+      <div class="container my-5">
+        <div class="alert alert-danger">Product not found.</div>
+        <a href="#/home" class="btn btn-danger">Back to Home</a>
+      </div>
+    `;
+    return;
+  }
+
+  document.title = p.name;
+
+  app.innerHTML = `
+    <div class="container my-5">
+      <a href="#/home" class="text-decoration-none">&larr; Back to Home</a>
+
+      <div class="row g-4 align-items-center mt-2">
+        <div class="col-12 col-md-6">
+          <img src="${p.img}" alt="${p.name}" class="img-fluid rounded border"
+            style="width:100%; max-height:420px; object-fit:cover;">
+        </div>
+
+        <div class="col-12 col-md-6">
+          <h1 class="mb-2">${p.name}</h1>
+          <div class="text-muted mb-2">${p.category}</div>
+          <div class="fs-3 fw-bold text-danger mb-3">${formatMoney(p.price)}</div>
+          <p class="text-muted">${p.desc}</p>
+
+          <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-outline-secondary add-cart" data-id="${p.id}">Add to Cart</button>
+            <a class="btn btn-danger buy-now" href="#/order" data-id="${p.id}">Buy Now</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderOrder() {
+  const app = document.getElementById("app");
+
+  app.innerHTML = `
+    <main class="container my-5">
+      <h1 class="mb-4">Order Details</h1>
+
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="card">
+            <div class="card-header fw-bold">Order Summary</div>
+            <div class="card-body">
+              <div id="orderItems" class="d-flex flex-column gap-3"></div>
+              <p id="emptyMsg" class="text-muted mb-0 d-none">Your cart is empty. Add some food from Home.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-header fw-bold">Pricing</div>
+            <div class="card-body">
+              <div class="d-flex justify-content-between">
+                <span>Subtotal</span><span id="subtotal">$0.00</span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Delivery</span><span id="delivery">$0.00</span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Tax</span><span id="tax">$0.00</span>
+              </div>
+
+              <hr>
+
+              <div class="d-flex justify-content-between fw-bold fs-5">
+                <span>Total</span><span id="total">$0.00</span>
+              </div>
+
+              <div class="d-grid gap-2 mt-3">
+                <button class="btn btn-danger" id="placeOrderBtn">Place Order</button>
+                <a class="btn btn-outline-secondary" href="#/home">Continue Shopping</a>
+              </div>
+
+              <button class="btn btn-outline-danger w-100 mt-3" id="clearCartBtn">Clear Cart</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  `;
+
+  renderOrderLogic();
 }
 
 // =========================
-//  Product Data (seed from cards on first load)
+//  Home: Search + No-results + Persist URL
 // =========================
-function seedProductsFromHomePage() {
-  // Only seed if we're on index and not seeded before
-  const items = document.querySelectorAll(".add-cart[data-id]");
-  if (!items.length) return;
+function setupSearchFilter() {
+  const input = document.getElementById("searchInput");
+  if (!input) return;
 
-  if (localStorage.getItem(PRODUCTS_KEY) === "1") return;
+  const items = Array.from(document.querySelectorAll(".food-item"));
+  const noResults = document.getElementById("noResults");
 
-  const map = {};
-  items.forEach((btn) => {
-    const id = btn.dataset.id;
-    map[id] = {
-      id,
-      name: btn.dataset.name,
-      price: Number(btn.dataset.price),
-      img: btn.dataset.img,
-      desc: btn.dataset.desc || "",
-      category: btn.dataset.category || "",
-    };
-  });
+  function apply() {
+    const q = input.value.trim().toLowerCase();
+    // persist query in hash query string
+    const { route, params } = parseRoute();
+    const newParams = new URLSearchParams(params.toString());
+    if (!q) newParams.delete("q");
+    else newParams.set("q", q);
+    window.location.hash = `#/home?${newParams.toString()}`;
 
-  localStorage.setItem("products", JSON.stringify(map));
-  localStorage.setItem(PRODUCTS_KEY, "1");
+    let visible = 0;
+    items.forEach((card) => {
+      const name = (card.dataset.name || "").toLowerCase();
+      const text = card.textContent.toLowerCase();
+      const match = !q || name.includes(q) || text.includes(q);
+      card.style.display = match ? "" : "none";
+      if (match) visible += 1;
+    });
+
+    if (noResults) noResults.classList.toggle("d-none", visible !== 0);
+  }
+
+  input.addEventListener("input", apply);
+
+  // initial apply for url q
+  const { params } = parseRoute();
+  const qFromUrl = (params.get("q") || "").trim();
+  input.value = qFromUrl;
+  apply();
 }
 
-function getProductsMap() {
-  try { return JSON.parse(localStorage.getItem("products")) || {}; }
-  catch { return {}; }
-}
-
 // =========================
-//  Active category button UI
+//  Home: Category scroll + active + persist URL
 // =========================
 function setActiveCategoryButton(btn) {
-  const all = document.querySelectorAll(".category-btn");
-  all.forEach((b) => {
+  document.querySelectorAll(".category-btn").forEach((b) => {
     b.classList.remove("btn-danger");
     b.classList.add("btn-outline-danger");
   });
@@ -144,168 +347,31 @@ function setActiveCategoryButton(btn) {
   }
 }
 
-// =========================
-//  Search filter (typing hides non-matching cards)
-//  + No results message
-//  + Persist query in URL (?q=...)
-// =========================
-function setupSearchFilter() {
-  const input = document.getElementById("searchInput");
-  if (!input) return; // not on index.html
-
-  const noResults = document.getElementById("noResults");
-  const items = Array.from(document.querySelectorAll(".food-item"));
-
-  // Restore q from URL
-  const qFromUrl = getUrlParams().get("q") || "";
-  input.value = qFromUrl;
-
-  function applyFilter() {
-    const q = input.value.trim().toLowerCase();
-    setUrlParam("q", q); // persist in URL
-
-    let visibleCount = 0;
-
-    items.forEach((card) => {
-      const name = (card.dataset.name || "").toLowerCase();
-      const text = card.textContent.toLowerCase();
-      const match = !q || name.includes(q) || text.includes(q);
-      card.style.display = match ? "" : "none";
-      if (match) visibleCount += 1;
-    });
-
-    if (noResults) {
-      noResults.classList.toggle("d-none", visibleCount !== 0);
-    }
-  }
-
-  input.addEventListener("input", applyFilter);
-  applyFilter(); // run once on load
-}
-
-// =========================
-//  Category scroll + active button
-// =========================
 function setupCategoryScroll() {
-  const btns = document.querySelectorAll(".category-btn");
-  if (!btns.length) return;
-
-  // Optional: restore category selection from URL (?cat=#pizzaSection)
-  const cat = getUrlParams().get("cat");
-  if (cat) {
-    const targetBtn = Array.from(btns).find((b) => b.dataset.target === cat);
-    if (targetBtn) {
-      setActiveCategoryButton(targetBtn);
-      const el = document.querySelector(cat);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }
-
-  btns.forEach((btn) => {
+  document.querySelectorAll(".category-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
+      const sectionId = btn.dataset.section;
+      if (!sectionId) return;
+
       setActiveCategoryButton(btn);
 
-      const target = btn.dataset.target;
-      if (!target) return;
+      // persist cat in url
+      const { params } = parseRoute();
+      const newParams = new URLSearchParams(params.toString());
+      newParams.set("cat", sectionId);
+      window.location.hash = `#/home?${newParams.toString()}`;
 
-      setUrlParam("cat", target); // persist selected category
-      const el = document.querySelector(target);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      // scroll
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
 }
 
 // =========================
-//  Click: Add to cart / Buy now (home + product page)
+//  Order logic
 // =========================
-document.addEventListener("click", (e) => {
-  const addBtn = e.target.closest(".add-cart");
-  if (addBtn) {
-    const item = {
-      id: addBtn.dataset.id,
-      name: addBtn.dataset.name,
-      price: Number(addBtn.dataset.price),
-      img: addBtn.dataset.img,
-    };
-    addToCart(item);
-    toastSuccess("Added to cart");
-    return;
-  }
-
-  const buyBtn = e.target.closest(".buy-now");
-  if (buyBtn) {
-    const item = {
-      id: buyBtn.dataset.id,
-      name: buyBtn.dataset.name,
-      price: Number(buyBtn.dataset.price),
-      img: buyBtn.dataset.img,
-    };
-    addToCart(item);
-    // let link navigate to order.html
-  }
-});
-
-// =========================
-//  Product page render (product.html?id=...)
-// =========================
-function renderProductPage() {
-  const wrap = document.getElementById("productWrap");
-  if (!wrap) return; // not product.html
-
-  const id = getUrlParams().get("id");
-  if (!id) {
-    wrap.innerHTML = `<div class="col-12"><div class="alert alert-danger">No product id found.</div></div>`;
-    return;
-  }
-
-  const map = getProductsMap();
-  const p = map[id];
-
-  if (!p) {
-    wrap.innerHTML = `<div class="col-12"><div class="alert alert-danger">Product not found. Go back to Home and open again.</div></div>`;
-    return;
-  }
-
-  document.title = p.name;
-
-  wrap.innerHTML = `
-    <div class="col-12 col-md-6">
-      <img src="${p.img}" alt="${p.name}" class="img-fluid rounded border" style="width:100%; max-height:420px; object-fit:cover;">
-    </div>
-
-    <div class="col-12 col-md-6">
-      <h1 class="mb-2">${p.name}</h1>
-      <div class="text-muted mb-2">${p.category || ""}</div>
-      <div class="fs-3 fw-bold text-danger mb-3">${formatMoney(p.price)}</div>
-      <p class="text-muted">${p.desc || "Tasty and fresh, prepared for you."}</p>
-
-      <div class="d-flex gap-2 mt-4">
-        <button class="btn btn-outline-secondary add-cart"
-          data-id="${p.id}"
-          data-name="${p.name}"
-          data-price="${p.price}"
-          data-img="${p.img}"
-        >Add to Cart</button>
-
-        <a class="btn btn-danger buy-now"
-          href="order.html"
-          data-id="${p.id}"
-          data-name="${p.name}"
-          data-price="${p.price}"
-          data-img="${p.img}"
-        >Buy Now</a>
-      </div>
-    </div>
-  `;
-}
-
-// =========================
-//  Order page render (multi-item)
-// =========================
-function renderOrderPage() {
+function renderOrderLogic() {
   const orderItemsDiv = document.getElementById("orderItems");
-  if (!orderItemsDiv) return;
-
   const emptyMsg = document.getElementById("emptyMsg");
   const subtotalEl = document.getElementById("subtotal");
   const deliveryEl = document.getElementById("delivery");
@@ -318,30 +384,30 @@ function renderOrderPage() {
   const deliveryFee = 2.0;
   const taxRate = 0;
 
-  function calcTotals(cart) {
-    const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  function calc(cart) {
+    const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
     const tax = subtotal * taxRate;
     const delivery = cart.length ? deliveryFee : 0;
-    const total = subtotal + delivery + tax;
+    const total = subtotal + tax + delivery;
 
     subtotalEl.textContent = formatMoney(subtotal);
-    deliveryEl.textContent = formatMoney(delivery);
     taxEl.textContent = formatMoney(tax);
+    deliveryEl.textContent = formatMoney(delivery);
     totalEl.textContent = formatMoney(total);
   }
 
-  function render(cart) {
+  function render() {
+    const cart = getCart();
     setCartCountBadge();
 
     if (!cart.length) {
       orderItemsDiv.innerHTML = "";
       emptyMsg.classList.remove("d-none");
-      calcTotals(cart);
+      calc(cart);
       return;
     }
 
     emptyMsg.classList.add("d-none");
-
     orderItemsDiv.innerHTML = cart.map((item) => `
       <div class="border rounded p-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
         <div class="d-flex align-items-center gap-3">
@@ -363,10 +429,10 @@ function renderOrderPage() {
       </div>
     `).join("");
 
-    calcTotals(cart);
+    calc(cart);
   }
 
-  render(getCart());
+  render();
 
   orderItemsDiv.addEventListener("click", (e) => {
     const minus = e.target.closest(".qty-minus");
@@ -378,8 +444,8 @@ function renderOrderPage() {
       const cart = getCart();
       const it = cart.find(x => x.id === id);
       if (!it) return;
-      render(updateQty(id, it.qty - 1));
-      return;
+      updateQty(id, it.qty - 1);
+      render();
     }
 
     if (plus) {
@@ -387,72 +453,113 @@ function renderOrderPage() {
       const cart = getCart();
       const it = cart.find(x => x.id === id);
       if (!it) return;
-      render(updateQty(id, it.qty + 1));
-      return;
+      updateQty(id, it.qty + 1);
+      render();
     }
 
     if (remove) {
-      render(removeFromCart(remove.dataset.id));
+      removeFromCart(remove.dataset.id);
+      render();
     }
   });
 
-  if (clearBtn) {
-    clearBtn.addEventListener("click", () => {
-      if (typeof Swal === "undefined") {
-        render(clearCart());
-        return;
-      }
-      Swal.fire({
-        icon: "warning",
-        title: "Clear cart?",
-        text: "This will remove all items.",
-        showCancelButton: true,
-        confirmButtonText: "Yes, clear",
-        cancelButtonText: "Cancel",
-      }).then((res) => {
-        if (res.isConfirmed) {
-          render(clearCart());
-          toastSuccess("Cart cleared");
-        }
-      });
-    });
-  }
-
-  if (placeBtn) {
-    placeBtn.addEventListener("click", () => {
-      const cart = getCart();
-      if (!cart.length) {
-        swalInfo("Cart empty", "Please add items from Home.");
-        return;
-      }
-
-      Swal.fire({
-        icon: "success",
-        title: "Order placed!",
-        text: "Thanks for ordering. Your food will be delivered soon.",
-        confirmButtonText: "OK",
-      }).then(() => {
+  clearBtn?.addEventListener("click", () => {
+    Swal.fire({
+      icon: "warning",
+      title: "Clear cart?",
+      text: "This will remove all items.",
+      showCancelButton: true,
+      confirmButtonText: "Yes, clear",
+    }).then((res) => {
+      if (res.isConfirmed) {
         clearCart();
-        render(getCart());
-      });
+        toastSuccess("Cart cleared");
+        render();
+      }
     });
-  }
+  });
+
+  placeBtn?.addEventListener("click", () => {
+    const cart = getCart();
+    if (!cart.length) {
+      swalInfo("Cart empty", "Please add items from Home.");
+      return;
+    }
+    Swal.fire({
+      icon: "success",
+      title: "Order placed!",
+      text: "Thanks for ordering. Your food will be delivered soon.",
+      confirmButtonText: "OK",
+    }).then(() => {
+      clearCart();
+      render();
+      navigate("#/home");
+    });
+  });
 }
 
 // =========================
-//  Init
+//  Global click handler for SPA buttons
 // =========================
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("click", (e) => {
+  const addBtn = e.target.closest(".add-cart");
+  if (addBtn) {
+    const id = addBtn.dataset.id;
+    const p = PRODUCTS.find(x => x.id === id);
+    if (p) {
+      addToCart(p);
+      toastSuccess("Added to cart");
+    }
+    return;
+  }
+
+  const buyBtn = e.target.closest(".buy-now");
+  if (buyBtn) {
+    const id = buyBtn.dataset.id;
+    const p = PRODUCTS.find(x => x.id === id);
+    if (p) addToCart(p);
+    // link goes to #/order anyway
+  }
+});
+
+// =========================
+//  Utils
+// =========================
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+// =========================
+//  App render
+// =========================
+function renderApp() {
+  const { route, param, params } = parseRoute();
+  setActiveNav(route);
   setCartCountBadge();
 
-  // index.html only
-  seedProductsFromHomePage();
-  setupSearchFilter();
-  setupCategoryScroll();
+  if (route === "product") {
+    renderProduct(param);
+    return;
+  }
 
-  // product.html only
-  renderProductPage();
+  if (route === "order") {
+    document.title = "Order Details";
+    renderOrder();
+    return;
+  }
 
-  // order.html only
-  renderOrderPage();
+  // default home
+  document.title = "FoodOrder SPA";
+  renderHome(params);
+}
+
+window.addEventListener("hashchange", renderApp);
+document.addEventListener("DOMContentLoaded", () => {
+  if (!window.location.hash) window.location.hash = "#/home";
+  renderApp();
 });
