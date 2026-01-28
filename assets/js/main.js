@@ -192,6 +192,40 @@ function hidePageLoader() {
 }
 
 // -------------------------
+// Quantity picker (cards + product view)
+// -------------------------
+function getQtyFromPicker(picker) {
+  if (!picker) return 1;
+  const valueEl = picker.querySelector("[data-qty-value]") || picker.querySelector(".qty-value");
+  const raw = picker.dataset.qty || valueEl?.textContent || "1";
+  const qty = Number.parseInt(raw, 10);
+  return Number.isNaN(qty) || qty < 1 ? 1 : qty;
+}
+
+function setQtyForPicker(picker, qty) {
+  if (!picker) return;
+  const valueEl = picker.querySelector("[data-qty-value]") || picker.querySelector(".qty-value");
+  picker.dataset.qty = String(qty);
+  if (valueEl) valueEl.textContent = String(qty);
+}
+
+function adjustPickerQty(picker, delta) {
+  const current = getQtyFromPicker(picker);
+  const next = Math.min(99, Math.max(1, current + delta));
+  setQtyForPicker(picker, next);
+}
+
+function findQtyPicker(fromEl) {
+  if (!fromEl) return null;
+  return (
+    fromEl.closest(".product-info")?.querySelector(".qty-picker") ||
+    fromEl.closest(".product-hero")?.querySelector(".qty-picker") ||
+    fromEl.closest(".card")?.querySelector(".qty-picker") ||
+    fromEl.closest(".food-item")?.querySelector(".qty-picker")
+  );
+}
+
+// -------------------------
 // Cart (localStorage)
 // -------------------------
 const CART_KEY = "cart";
@@ -218,12 +252,13 @@ function setCartCountBadge() {
   badge.textContent = cartCount(getCart());
 }
 
-function addToCart(item) {
+function addToCart(item, qty = 1) {
   const cart = getCart();
   const found = cart.find((x) => x.id === item.id);
+  const amount = Math.max(1, Number(qty) || 1);
 
-  if (found) found.qty += 1;
-  else cart.push({ ...item, qty: 1 });
+  if (found) found.qty += amount;
+  else cart.push({ ...item, qty: amount });
 
   saveCart(cart);
   setCartCountBadge();
@@ -414,13 +449,21 @@ function renderProductView(params) {
           <div class="product-info reveal" data-reveal-delay="120">
             <span class="product-meta">${escapeHtml(p.category)}</span>
             <h1 class="product-title">${escapeHtml(p.name)}</h1>
-            <div class="product-price">${formatMoney(p.price)}</div>
-            <p class="product-desc">${escapeHtml(p.raw?.strInstructions || p.description)}</p>
-
-            <div class="product-actions">
-              <button class="btn btn-outline-secondary add-cart" data-id="${p.id}">Add to Cart</button>
-              <a class="btn btn-danger order-now" href="#/order" data-id="${p.id}">Order Now</a>
+            <div class="product-price-row">
+              <div class="product-price">${formatMoney(p.price)}</div>
+              <div class="product-actions inline-actions">
+                <div class="qty-picker" data-qty="1">
+                  <button class="qty-btn qty-minus" type="button" aria-label="Decrease quantity">−</button>
+                  <span class="qty-value" data-qty-value>1</span>
+                  <button class="qty-btn qty-plus" type="button" aria-label="Increase quantity">+</button>
+                </div>
+                <div class="product-buttons">
+                  <button class="btn btn-outline-secondary add-cart" data-id="${p.id}">Add to Cart</button>
+                  <a class="btn btn-danger order-now" href="#/order" data-id="${p.id}">Order Now</a>
+                </div>
+              </div>
             </div>
+            <p class="product-desc">${escapeHtml(p.raw?.strInstructions || p.description)}</p>
           </div>
         </div>
       </div>
@@ -553,10 +596,18 @@ function productCard(p) {
           <a href="#/product?id=${encodeURIComponent(p.id)}" class="text-decoration-none text-dark">
             <h5 class="card-title">${escapeHtml(p.name)}</h5>
             <p class="card-text small text-muted">${escapeHtml(p.description)}</p>
-            <p class="fw-bold mb-3">${formatMoney(p.price)}</p>
           </a>
 
-          <div class="mt-auto d-flex gap-2">
+          <div class="card-meta-row">
+            <span class="card-price">${formatMoney(p.price)}</span>
+            <div class="qty-picker" data-qty="1">
+              <button class="qty-btn qty-minus" type="button" aria-label="Decrease quantity">−</button>
+              <span class="qty-value" data-qty-value>1</span>
+              <button class="qty-btn qty-plus" type="button" aria-label="Increase quantity">+</button>
+            </div>
+          </div>
+
+          <div class="mt-auto card-actions">
             <button class="btn btn-outline-secondary w-50 btn-sm add-cart" data-id="${p.id}">
               Add to Cart
             </button>
@@ -798,24 +849,36 @@ function mountOrderLogic() {
 // Global click handler: Add / Buy
 // =====================================================
 document.addEventListener("click", (e) => {
+  const qtyMinus = e.target.closest(".qty-picker .qty-minus");
+  const qtyPlus = e.target.closest(".qty-picker .qty-plus");
+  if (qtyMinus || qtyPlus) {
+    const picker = (qtyMinus || qtyPlus).closest(".qty-picker");
+    adjustPickerQty(picker, qtyPlus ? 1 : -1);
+    return;
+  }
+
   const addBtn = e.target.closest(".add-cart");
   // Order Now (product page)
-const orderNowBtn = e.target.closest(".order-now");
-if (orderNowBtn) {
-  const id = orderNowBtn.dataset.id;
-  const p = PRODUCTS_MAP[id];
-  if (!p) return;
+  const orderNowBtn = e.target.closest(".order-now");
+  if (orderNowBtn) {
+    const id = orderNowBtn.dataset.id;
+    const p = PRODUCTS_MAP[id];
+    if (!p) return;
+    const qty = getQtyFromPicker(findQtyPicker(orderNowBtn));
 
-  addToCart({
-    id: p.id,
-    name: p.name,
-    price: p.price,
-    img: p.image,
-  });
+    addToCart(
+      {
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        img: p.image,
+      },
+      qty
+    );
 
-  // navigation already happens via href="#/order"
-  return;
-}
+    // navigation already happens via href="#/order"
+    return;
+  }
 
 
   if (addBtn) {
@@ -823,8 +886,9 @@ if (orderNowBtn) {
     const p = PRODUCTS_MAP[id];
     if (!p) return;
 
-    addToCart({ id: p.id, name: p.name, price: p.price, img: p.image });
-    toastSuccess("Added to cart");
+    const qty = getQtyFromPicker(findQtyPicker(addBtn));
+    addToCart({ id: p.id, name: p.name, price: p.price, img: p.image }, qty);
+    toastSuccess(qty > 1 ? `Added ${qty} items` : "Added to cart");
     return;
   }
 
@@ -834,7 +898,8 @@ if (orderNowBtn) {
     const p = PRODUCTS_MAP[id];
     if (!p) return;
 
-    addToCart({ id: p.id, name: p.name, price: p.price, img: p.image });
+    const qty = getQtyFromPicker(findQtyPicker(buyBtn));
+    addToCart({ id: p.id, name: p.name, price: p.price, img: p.image }, qty);
     // navigation happens via link (#/order)
   }
 });

@@ -291,6 +291,61 @@ a:hover {
   gap: 0.6rem;
 }
 
+.card-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.5rem 0 0.9rem;
+}
+
+.card-price {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--app-text);
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.qty-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--app-border);
+  background: rgba(15, 23, 42, 0.04);
+  width: fit-content;
+}
+
+.qty-picker .qty-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid var(--app-border);
+  background: transparent;
+  color: var(--app-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.qty-picker .qty-btn:hover {
+  background: rgba(220, 53, 69, 0.12);
+  border-color: rgba(220, 53, 69, 0.35);
+}
+
+.qty-picker .qty-value {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 600;
+}
+
 .food-item .card-title {
   font-size: 1.05rem;
   font-weight: 700;
@@ -551,6 +606,13 @@ a:hover {
 .product-info {
   display: flex;
   flex-direction: column;
+  gap: 0.8rem;
+}
+
+.product-price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 0.9rem;
 }
 
@@ -586,13 +648,27 @@ a:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 0.5rem;
+  align-items: center;
 }
 
 .product-actions .btn {
   border-radius: 999px;
   font-weight: 600;
   padding: 0.45rem 1.2rem;
+}
+
+.product-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.product-actions .qty-picker {
+  margin-right: 0.25rem;
+}
+
+.product-actions.inline-actions {
+  margin-left: auto;
 }
 
 [data-theme="dark"] .product-price {
