@@ -9,13 +9,20 @@ This project evolved step-by-step from a simple static design to a fully working
 ## Project Features
 
 - Bootstrap 5 responsive layout
-- Hero carousel (slider)
-- Search filter (typing hides non-matching cards)
+- Hero carousel (slider) + polished hero layout
+- Search filter + live suggestions (from embedded data)
 - “No results found” message when search returns nothing
 - Category buttons (scroll to section + active highlight)
+- Category sections sorted by product count (most items first)
 - Product details view (SPA route)
-- Add to cart + cart count badge
+- Add to cart + cart count badge + quantity picker on cards and product page
 - Order page (cart list, quantity update, remove, clear cart)
+- Dark/light mode toggle (default dark)
+- Page load animations + reveal effects
+- Loader animation on page start
+- About, Contact, Book Table pages (SPA)
+- Contact/Booking forms with SweetAlert2 success messages
+- Visitor Insights (IP + location via JSONBin + ipapi.co)
 - SweetAlert2 for notifications (Add to cart / Clear cart / Order placed)
 - Offline support (works by double-clicking `index.html`)
 
@@ -109,6 +116,9 @@ This project evolved step-by-step from a simple static design to a fully working
 - **Home/Menu:** `#/home`
 - **Product Details:** `#/product?id=MEAL_ID`
 - **Order Page:** `#/order`
+- **About:** `#/about`
+- **Contact:** `#/contact`
+- **Book Table:** `#/book`
 
 ---
 
@@ -117,6 +127,7 @@ This project evolved step-by-step from a simple static design to a fully working
 - Data is structured in an **API-compatible format** (TheMealDB-style).
 - For offline reliability, the dataset is **embedded into `data.js`** (no network calls).
 - Cart data persists using **localStorage**.
+- Visitor Insights uses **JSONBin** storage and **ipapi.co** for IP-based location on the live site.
 
 ---
 
