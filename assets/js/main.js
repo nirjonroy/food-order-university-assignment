@@ -708,7 +708,7 @@ function renderOrderView() {
           <div class="card order-card reveal">
             <div class="card-header fw-bold">Order Summary</div>
             <div class="card-body">
-              <div id="orderItems" class="d-flex flex-column gap-3" data-reveal-stagger="true"></div>
+              <div id="orderItems" class="d-flex flex-column gap-3"></div>
               <p id="emptyMsg" class="text-muted mb-0 d-none">Your cart is empty. Add items from Home.</p>
             </div>
           </div>
@@ -1284,7 +1284,7 @@ function mountOrderLogic() {
     orderItemsDiv.innerHTML = cart
       .map(
         (item) => `
-        <div class="order-item reveal">
+        <div class="order-item">
           <div class="order-item-main">
             <img src="${item.img}" alt="${escapeHtml(item.name)}" class="order-item-img">
             <div>
@@ -1309,7 +1309,6 @@ function mountOrderLogic() {
       .join("");
 
     calc(cart);
-    initAnimations();
   }
 
   render();
