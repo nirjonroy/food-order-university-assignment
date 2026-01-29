@@ -1309,6 +1309,7 @@ function mountOrderLogic() {
       .join("");
 
     calc(cart);
+    initAnimations();
   }
 
   render();
