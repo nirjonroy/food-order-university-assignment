@@ -523,6 +523,11 @@ function renderHomeView(params) {
       <div id="noResults" class="alert alert-warning d-none">No results found. Try a different keyword.</div>
     </section>
 
+    <!-- Menu -->
+    <section id="menu" class="container my-5">
+      <div id="menuSections" data-reveal-stagger="true"></div>
+    </section>
+
     <!-- Why Choose Us -->
     <section class="container my-5">
       <div class="section-head reveal">
@@ -609,11 +614,6 @@ function renderHomeView(params) {
       <div id="visitorPanel" class="visitor-panel reveal">
         <div class="visitor-empty">Loading visitor data...</div>
       </div>
-    </section>
-
-    <!-- Menu -->
-    <section id="menu" class="container my-5">
-      <div id="menuSections" data-reveal-stagger="true"></div>
     </section>
   `;
 
@@ -1035,7 +1035,16 @@ function renderMenuSections(activeCatId) {
   const sectionsWrap = document.getElementById("menuSections");
   if (!sectionsWrap) return;
 
-  const categories = Array.from(new Set(PRODUCTS.map((p) => p.category))).sort();
+  const categoryCounts = PRODUCTS.reduce((acc, p) => {
+    acc[p.category] = (acc[p.category] || 0) + 1;
+    return acc;
+  }, {});
+
+  const categories = Object.keys(categoryCounts).sort((a, b) => {
+    const diff = categoryCounts[b] - categoryCounts[a];
+    if (diff !== 0) return diff;
+    return a.localeCompare(b);
+  });
   const topCategories = categories.slice(0, 8);
 
   sectionsWrap.innerHTML = topCategories
